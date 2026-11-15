@@ -1,0 +1,72 @@
+"""Compare saved real evaluations; reject differing validation protocols."""
+import argparse
+import json
+from pathlib import Path
+
+from PIL import Image
+import yaml
+
+from siteguard.training.datasets import write_json
+
+
+def head_size_recall(analysis: Path, data_path: Path) -> dict:
+    data = yaml.safe_load(data_path.read_text())
+    root = Path(data["path"])
+    diagnostic = json.loads((analysis/"errors/diagnostics.json").read_text())
+    cls = diagnostic["classes"].index("no_helmet")
+    errors = {Path(r["image"]).stem: {tuple(e["gt"]) for e in r["errors"] if "gt" in e}
+              for r in diagnostic["examples"]}
+    bins = {name: {"ground_truth": 0, "correct": 0, "missed_or_wrong": 0}
+            for name in ("under8", "8to16", "16to32", "32plus")}
+    for image in (root/data["val"]).glob("*.jpg"):
+        with Image.open(image) as im:
+            width, height = im.size
+        for line in (root/"labels/val"/f"{image.stem}.txt").read_text().splitlines():
+            row = tuple(map(float, line.split()))
+            if int(row[0]) != cls:
+                continue
+            short = min(row[3]*width, row[4]*height)*640/max(width, height)
+            group = "under8" if short < 8 else "8to16" if short < 16 else "16to32" if short < 32 else "32plus"
+            bins[group]["ground_truth"] += 1
+            missed = row in errors.get(image.stem, set())
+            bins[group]["missed_or_wrong" if missed else "correct"] += 1
+    return {k: {**v, "recall": v["correct"]/v["ground_truth"] if v["ground_truth"] else None}
+            for k, v in bins.items()}
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--smoke", type=Path, required=True)
+    parser.add_argument("--baseline", type=Path, required=True)
+    parser.add_argument("--data", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    a, b = [json.loads((p/"metrics.json").read_text()) for p in (args.smoke, args.baseline)]
+    for key in ("protocol", "data_yaml_sha256", "ultralytics_version", "confusion_classes"):
+        if a[key] != b[key]:
+            raise ValueError(f"Evaluation settings differ: {key}")
+    if a["protocol"]["imgsz"] != 640:
+        raise ValueError("Size diagnostic is defined for the fixed 640 baseline protocol")
+    comparison = {"scope": "same official development validation; not independent test",
+        "protocol": b["protocol"], "smoke_checkpoint_sha256": a["checkpoint_sha256"],
+        "baseline_checkpoint_sha256": b["checkpoint_sha256"],
+        "results": {k: {"smoke": a["results"][k], "baseline": b["results"][k],
+                        "delta": b["results"][k]-a["results"][k]} for k in a["results"]},
+        "classwise": [], "fixed_threshold_counts": {}, "wrong_no_helmet_as_helmet": {},
+        "no_helmet_size_recall": {}}
+    for ca, cb in zip(a["classwise"], b["classwise"], strict=True):
+        if ca["class"] != cb["class"]:
+            raise ValueError("Class ordering differs")
+        comparison["classwise"].append({"class": ca["class"], **{k: {
+            "smoke": ca[k], "baseline": cb[k], "delta": cb[k]-ca[k]}
+            for k in ("precision", "recall", "ap50", "ap50_95")}})
+    for name, metrics, folder in (("smoke", a, args.smoke), ("baseline", b, args.baseline)):
+        comparison["fixed_threshold_counts"][name] = metrics["focus_fixed_counts"]
+        comparison["wrong_no_helmet_as_helmet"][name] = metrics["no_helmet_to_helmet"]
+        comparison["no_helmet_size_recall"][name] = head_size_recall(folder, args.data)
+    write_json(args.output, comparison)
+    print(args.output)
+
+
+if __name__ == "__main__":
+    main()

@@ -92,10 +92,22 @@ dataset root and retains every original class ID. Native training uses
 class names, split membership and review scope are checked before execution.
 The semantic association map does not filter native training annotations.
 
-An honestly recorded agent visual spot-check can authorize only
-`training_scope: one_epoch_smoke_only`, with original label IDs preserved. It
-does not assert an independent human audit of all annotations. `stage: smoke`
-enforces exactly one epoch. Existing canonical remapping still requires its
+An agent visual spot-check initially authorizes only
+`training_scope: one_epoch_smoke_only`, with original label IDs preserved.
+A native baseline additionally requires `training_scope: baseline` and either
+an actual human review or explicit user authorization recorded as
+`authorized_by_user: true`. The current 80-epoch experiment was explicitly
+requested by the user after the smoke; that authorization does not turn the
+agent spot-check into an independent human annotation audit. `stage: smoke`
+still enforces exactly one epoch. Existing canonical remapping requires its
 separate completeness review and cannot accidentally consume source-schema data.
 See [the current verification record](verification.md) for the actual observed
-counts, scoped review, one-epoch outputs and remaining model-quality limits.
+counts, scoped review, baseline outputs and remaining model-quality limits.
+
+The baseline error review found a non-protective knit cap labeled `no_helmet`
+and a suspected `no_helmet` box covering a bent worker's torso. Native labels
+were preserved. Thus this source class should be interpreted as the dataset's
+visible no-protective-helmet category, with annotation noise, rather than a
+guarantee of literal uncovered scalp. The runtime name `barehead` is an internal
+mapping, not proof that every source annotation satisfies stricter semantics.
+See the verification record for the exact image IDs and unresolved cases.

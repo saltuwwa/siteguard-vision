@@ -1,0 +1,19 @@
+# Source-preserving 12-class baseline. Create the gitignored local data YAML
+# and validation report using the procedure in docs/verification.md first.
+stage: A
+model: yolo26s.pt
+data: data/local/construction-ppe.source.yaml
+data_schema: source
+validation_report: runs/dataset-local/report.json
+project: runs/train
+name: construction-ppe-12class-baseline80-20261115
+epochs: 80
+patience: 15
+batch: 8
+imgsz: 640
+device: '0'
+workers: 0
+seed: 42
+amp: false
+deterministic: true
+tensorboard: false

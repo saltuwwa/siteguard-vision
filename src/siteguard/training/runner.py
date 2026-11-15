@@ -4,6 +4,7 @@ import importlib.metadata
 import hashlib
 import json
 import platform
+import time
 from pathlib import Path
 from typing import Any, Literal
 
@@ -66,8 +67,8 @@ def validate_built_data(data_path: Path, split: str = "val") -> dict[str, Any]:
 def validate_source_data(data_path: Path, report_path: Path, smoke_only: bool) -> dict[str, Any]:
     """Bind native labels to the actual audited bytes, without canonical projection.
 
-    An agent visual spot check authorizes only the user's one-epoch smoke, not
-    a claim that every source annotation received independent human review.
+    Agent review never claims independent human annotation review. A baseline
+    can proceed under an explicit user authorization recorded in the review.
     """
     data = yaml.safe_load(data_path.read_text(encoding="utf-8"))
     if "download" in data or not Path(data["path"]).is_absolute():
@@ -82,8 +83,9 @@ def validate_source_data(data_path: Path, report_path: Path, smoke_only: bool) -
     if {int(k): v for k, v in source["classes"].items()} != class_names(data):
         raise ValueError("Training class names differ from the audited source")
     review = source["review"]
-    if not smoke_only and (review.get("training_scope") != "baseline" or review.get("kind") != "human"):
-        raise ValueError("Source spot-check authorizes one-epoch smoke only")
+    if not smoke_only and (review.get("training_scope") != "baseline" or not (
+            review.get("kind") == "human" or review.get("authorized_by_user") is True)):
+        raise ValueError("Source spot-check authorizes one-epoch smoke only; baseline needs explicit authorization")
     manifest = source["manifest"]
     if manifest.get("license") not in {"CC-BY-4.0", "CC0-1.0", "Public-Domain"}:
         raise ValueError("Source license not approved")
@@ -164,6 +166,36 @@ def run_training(config_path: Path) -> Path:
         "dataset_independence_proven": report["independence_proven"],
         "review_scope": report["sources"][0].get("review", {})}
     write_json(experiment_dir/"experiment.json", metadata)
+    import torch
+    epoch_records: list[dict[str, Any]] = []
+    started = time.perf_counter()
+    if device != "cpu":
+        torch.cuda.reset_peak_memory_stats(int(device))
+
+    def record_epoch(trainer: Any) -> None:
+        metrics = trainer.validator.metrics
+        names = trainer.data["names"]
+        row = {"epoch": int(trainer.epoch)+1, "elapsed_seconds": time.perf_counter()-started,
+               "phase": "epoch" if trainer.validator.training else "final_best_validation",
+               "classwise": [{"class_id": int(c), "class": names[int(c)],
+                   "precision": float(p), "recall": float(r), "ap50": float(a50), "ap50_95": float(ap)}
+                   for c, p, r, a50, ap in zip(metrics.box.ap_class_index, metrics.box.p,
+                       metrics.box.r, metrics.box.ap50, metrics.box.ap, strict=True)]}
+        if device != "cpu":
+            row["cuda_peak_allocated_bytes"] = torch.cuda.max_memory_allocated(int(device))
+            row["cuda_peak_reserved_bytes"] = torch.cuda.max_memory_reserved(int(device))
+        if not trainer.validator.training:
+            # Ultralytics invokes this callback again after final best.pt validation
+            # and temporarily increments epoch. Preserve it separately, never as
+            # an extra training epoch.
+            row["epochs_completed"] = int(trainer.epoch)
+            row.pop("epoch")
+            write_json(experiment_dir/"final-best-validation.json", row)
+            return
+        epoch_records.append(row)
+        write_json(experiment_dir/"per-class-epochs.json", epoch_records)
+
+    model.add_callback("on_fit_epoch_end", record_epoch)
     try:
         arguments: dict[str, Any] = {"data": str(cfg.data.resolve()), "epochs": cfg.epochs,
             "batch": cfg.batch, "imgsz": cfg.imgsz, "device": device, "workers": cfg.workers,
@@ -186,12 +218,17 @@ def run_training(config_path: Path) -> Path:
                 for row in csv.DictReader(metrics_stream)]
         metadata["actual_training_device"] = str(model.trainer.device)
         metadata["epochs_completed"] = int(model.trainer.epoch)+1
+        metadata["stop_reason"] = "early_stopping" if metadata["epochs_completed"] < cfg.epochs else "epoch_limit"
         metadata["status"] = "completed"
     except BaseException as exc:
         metadata["status"] = "failed"
         metadata["error_type"] = type(exc).__name__
         raise
     finally:
+        metadata["training_seconds"] = time.perf_counter()-started
+        if device != "cpu":
+            metadata["cuda_peak_allocated_bytes"] = torch.cuda.max_memory_allocated(int(device))
+            metadata["cuda_peak_reserved_bytes"] = torch.cuda.max_memory_reserved(int(device))
         write_json(experiment_dir/"experiment.json", metadata)
     return experiment_dir
 

@@ -10,7 +10,7 @@ import yaml
 from PIL import Image, ImageDraw
 from scipy.optimize import linear_sum_assignment
 
-from siteguard.training.datasets import CANONICAL, write_json
+from siteguard.training.datasets import class_names, write_json
 
 
 def iou(a: list[float], b: list[float]) -> float:
@@ -25,15 +25,16 @@ def iou(a: list[float], b: list[float]) -> float:
 
 
 def frame_diagnostics(data_path: Path, predicted_labels: Path, output: Path,
-                      split: str = "val", threshold: float = .25, match_iou: float = .5) -> dict[str, Any]:
+                      split: str = "val", threshold: float = .25, match_iou: float = .5,
+                      max_examples: int = 24) -> dict[str, Any]:
     data = yaml.safe_load(data_path.read_text())
-    if data["names"] != CANONICAL:
-        raise ValueError("Expected canonical built dataset")
+    names = class_names(data)
+    count = len(names)
     root = Path(data["path"])
     records = []
-    confusion = np.zeros((4, 4), dtype=np.int64)  # row GT, col prediction; 3=background
+    confusion = np.zeros((count+1, count+1), dtype=np.int64)  # row GT, col prediction
     for path in sorted((root/data[split]).rglob("*")):
-        if not path.is_file():
+        if not path.is_file() or path.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}:
             continue
         label = root/"labels"/split/f"{path.stem}.txt"
         truth = [list(map(float, line.split())) for line in label.read_text().splitlines() if line.strip()]
@@ -61,27 +62,47 @@ def frame_diagnostics(data_path: Path, predicted_labels: Path, output: Path,
                 errors.append({"kind": "wrong_class", "gt": truth[g], "prediction": prediction[p]})
         for g, gt in enumerate(truth):
             if g not in gt_matched:
-                confusion[int(gt[0]), 3] += 1
+                confusion[int(gt[0]), count] += 1
                 errors.append({"kind": "FN", "gt": gt})
         for p, pred in enumerate(prediction):
             if p not in pred_matched:
-                confusion[3, int(pred[0])] += 1
+                confusion[count, int(pred[0])] += 1
                 errors.append({"kind": "FP", "prediction": pred})
         if errors:
-            output.mkdir(parents=True, exist_ok=True)
-            with Image.open(path) as im:
-                canvas = im.convert("RGB")
-                draw = ImageDraw.Draw(canvas)
-                for rows, color in ((truth, "lime"), (prediction, "red")):
-                    for row in rows:
-                        cls, x, y, w, h = row[:5]
-                        box = [(x-w/2)*im.width, (y-h/2)*im.height,
-                               (x+w/2)*im.width, (y+h/2)*im.height]
-                        draw.rectangle(box, outline=color, width=2)
-                        draw.text(box[:2], CANONICAL[int(cls)], fill=color)
-                canvas.save(output/f"{path.stem}.jpg")
             records.append({"image": str(path), "errors": errors})
-    report = {"confidence": threshold, "iou": match_iou, "classes": [*CANONICAL, "background"],
+    def priority(record: dict[str, Any]) -> int:
+        for error in record["errors"]:
+            if error["kind"] == "wrong_class" and {
+                names[int(error["gt"][0])], names[int(error["prediction"][0])]
+            } == {"helmet", "no_helmet"}:
+                return 0
+        if any(names[int(e["gt"][0])] in {"no_helmet", "barehead"}
+               for e in record["errors"] if "gt" in e):
+            return 1
+        return 2
+
+    output.mkdir(parents=True, exist_ok=True)
+    for record in sorted(records, key=priority)[:max_examples]:
+        path = Path(record["image"])
+        label = root/"labels"/split/f"{path.stem}.txt"
+        truth = [list(map(float, line.split())) for line in label.read_text().splitlines() if line.strip()]
+        predicted_file = predicted_labels/f"{path.stem}.txt"
+        prediction = [list(map(float, line.split())) for line in predicted_file.read_text().splitlines()
+                      if line.strip()] if predicted_file.exists() else []
+        prediction = [p for p in prediction if p[5] >= threshold]
+        with Image.open(path) as im:
+            canvas = im.convert("RGB")
+            draw = ImageDraw.Draw(canvas)
+            for rows, color in ((truth, "lime"), (prediction, "red")):
+                for row in rows:
+                    cls, x, y, w, h = row[:5]
+                    box = [(x-w/2)*im.width, (y-h/2)*im.height,
+                           (x+w/2)*im.width, (y+h/2)*im.height]
+                    draw.rectangle(box, outline=color, width=2)
+                    draw.text(box[:2], names[int(cls)], fill=color)
+            canvas.save(output/f"{path.stem}.jpg")
+        record["visualization"] = str(output/f"{path.stem}.jpg")
+    report = {"confidence": threshold, "iou": match_iou, "classes": [*names.values(), "background"],
               "confusion_rows_gt_columns_prediction": confusion.tolist(), "examples": records}
     write_json(output/"diagnostics.json", report)
     return report

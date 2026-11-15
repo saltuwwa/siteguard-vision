@@ -11,14 +11,14 @@ class StrictModel(BaseModel):
 
 
 class RulesConfig(StrictModel):
-    min_observations: int = Field(4, ge=2)
-    window_seconds: float = Field(4.0, gt=0)
-    min_duration: float = Field(1.5, gt=0)
-    max_gap: float = Field(0.8, gt=0)
-    clear_seconds: float = Field(1.0, gt=0)
-    cooldown_seconds: float = Field(5.0, ge=0)
-    min_confidence: float = Field(0.6, ge=0, le=1)
-    min_head_pixels: int = Field(12, ge=1)
+    min_observations: int = Field(default=4, ge=2)
+    window_seconds: float = Field(default=4.0, gt=0)
+    min_duration: float = Field(default=1.5, gt=0)
+    max_gap: float = Field(default=0.8, gt=0)
+    clear_seconds: float = Field(default=1.0, gt=0)
+    cooldown_seconds: float = Field(default=5.0, ge=0)
+    min_confidence: float = Field(default=0.6, ge=0, le=1)
+    min_head_pixels: int = Field(default=12, ge=1)
 
     @model_validator(mode="after")
     def duration_fits(self) -> "RulesConfig":
@@ -34,19 +34,19 @@ class RuntimeConfig(StrictModel):
     )
     device: str = "auto"
     half: bool = False
-    confidence: float = Field(0.15, ge=0, le=1)
-    imgsz: int = Field(640, ge=32)
-    inference_fps: float = Field(8.0, gt=0)
-    max_width: int = Field(1280, ge=32)
-    queue_size: int = Field(8, ge=1)
+    confidence: float = Field(default=0.15, ge=0, le=1)
+    imgsz: int = Field(default=640, ge=32)
+    inference_fps: float = Field(default=8.0, gt=0)
+    max_width: int = Field(default=1280, ge=32)
+    queue_size: int = Field(default=8, ge=1)
     live_drop_policy: Literal["drop_oldest", "drop_newest"] = "drop_oldest"
     rtsp_transport: Literal["tcp", "udp"] = "tcp"
-    open_timeout_ms: int = Field(5000, ge=100)
-    read_timeout_ms: int = Field(5000, ge=100)
-    reconnect_attempts: int = Field(10, ge=0)
-    reconnect_delay: float = Field(1.0, gt=0)
-    track_buffer_seconds: float = Field(2.0, gt=0)
-    cut_threshold: float = Field(0.65, ge=0, le=1)
+    open_timeout_ms: int = Field(default=5000, ge=100)
+    read_timeout_ms: int = Field(default=5000, ge=100)
+    reconnect_attempts: int = Field(default=10, ge=0)
+    reconnect_delay: float = Field(default=1.0, gt=0)
+    track_buffer_seconds: float = Field(default=2.0, gt=0)
+    cut_threshold: float = Field(default=0.65, ge=0, le=1)
     database_url: str = "sqlite:///runs/siteguard.sqlite"
     kafka_enabled: bool = False
     rules: RulesConfig = Field(default_factory=lambda: RulesConfig())

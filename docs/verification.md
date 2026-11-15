@@ -1,6 +1,90 @@
-﻿# Dataset validation and CUDA training verification — 2026-11-15
+# Dataset validation and CUDA training verification — 2026-11-15
 
-The supplied local Construction-PPE dataset passed file/annotation integrity checks. A genuine **one-epoch YOLO26s fine-tuning run completed on CUDA:0**, preserving all **12 original classes**. Best/last checkpoints, training CSV, validation JSON, annotated examples and hardware telemetry are saved locally. No long training run was started. This establishes the training/inference plumbing; the one-epoch model is not deployment-ready, and real MP4 event evaluation remains unverified.
+The unchanged 12-class dataset passed integrity checks. After the one-epoch smoke, the user-requested **80-epoch YOLO26s baseline completed on CUDA:0**. Repeated validation increased `no_helmet` recall from **0.22346 to 0.65922** and overall mAP50–95 from **0.37445 to 0.60088**. These are development validation results, not independent test or production event performance. The checkpoint executes in the SiteGuard adapter. Genuine MP4 evaluation remains blocked by absent construction video assets.
+
+## Full baseline: error analysis, training and comparison
+
+The machine-readable [baseline report](reports/baseline-20261115.json) records all classes' object/image counts, precision, recall, AP50 and AP50–95, size distributions, checkpoint hashes and comparison settings. Full local artifacts are in `runs/nohelmet-baseline/` and `runs/train/construction-ppe-12class-baseline80-20261115/`. Weights, datasets, private configuration and run images remain gitignored.
+
+### Phase 1: observed errors and annotation semantics
+
+`scripts/analyze_checkpoint.py` evaluates genuine weights and saves native confusion/PR plots, individual `PR-<class>.png` files for all 12 classes, a fixed-threshold 13-by-13 confusion matrix including background, 24 full-image error overlays and head crops. Green boxes are source annotations; red boxes are predictions. Predictions never become labels. `errors/diagnostics.json` contains all errors, including those beyond the visualization limit.
+
+The smoke model had **34** `no_helmet -> helmet` assignments at confidence 0.25 / matching IoU 0.5. It detected only **43/179** annotated no-helmet objects correctly at that threshold. Helmet has **1,282 train objects in 613 images**, while no_helmet has **634 in 337 images**. Validation has 294 helmets in 146 images and 179 no_helmet objects in 91 images. Person has 1,962 objects in 791 training images and 481 in all 200 validation images. Every class's counts are in the JSON report.
+
+After resizing the long side to 640, **354/634 training no_helmet objects** and **86/179 validation objects** have a short side below 16 pixels. Validation contains **57** below 8 pixels. These are geometric diagnostics from real source boxes.
+
+Visual review covered source overlays, smoke errors and baseline crops/full-image context. Helmet normally marks protective headwear; Person describes a visible body; no_helmet normally marks a visible head without protective headwear. Exceptions remain:
+
+- `source-38d248f0e2100035cc7c30a81392baa8.jpg`: a knit cap is labeled no_helmet and predicted helmet. Thus no_helmet does not guarantee literally uncovered scalp. Another predicted helmet appears to cover non-protective headwear and needs human adjudication.
+- `source-485eb05877af0e242d34e297d390c7cd.jpg`: one no_helmet box appears to span a bent worker's orange torso rather than a head; a vest prediction matches that region. This is a suspected semantic/box error, not necessarily a head-classification failure.
+- Small, partially visible and distant head crops often lack enough pixels for confident adjudication. A smoke FP example appears to contain an unattended real helmet, suggesting possible annotation incompleteness. Errors remain annotation-relative until reviewed.
+
+Source labels were not edited. This is an agent visual spot-check, not an exhaustive human audit. The user's explicit authorization for the native 12-class baseline is recorded separately from review identity. Runtime `barehead` maps native no_helmet with the semantic caveat above. UNKNOWN remains necessary for insufficient evidence; absence of a helmet alone does not establish a violation.
+
+### Phase 2: actual training
+
+Activate the CUDA-enabled `.venv` first; `python` and `siteguard` must resolve there. Use the gitignored resolved source data YAML and validation report described in the earlier audit below.
+
+```powershell
+$env:YOLO_CONFIG_DIR=Join-Path (Get-Location) 'runs/ultralytics-config'
+$env:YOLO_AUTOINSTALL='false'
+siteguard dataset validate --config configs/datasets.local.yaml
+siteguard train --config configs/train-baseline.local.yaml
+# A portable copy of the executed settings is configs/train-baseline.yaml.
+# Choose a new experiment name for reproduction; existing runs are protected.
+```
+
+Training starts from the same `yolo26s.pt` initialization as the smoke, rather than continuing the smoke checkpoint. It retains **all 12 classes**, the official 800/200 split, **imgsz=640, batch=8, seed=42, workers=0, deterministic=true, FP32 / AMP=false**, and the same augmentations. Batch 8 was retained after measuring the smoke's 7,461 MiB whole-device peak on a 32 GiB RTX 5090. Effective optimizer, learning rate, mosaic/close-mosaic settings and all resolved arguments are in `args.yaml` and `experiment.json`.
+
+Training exited **0**, completed **80 epochs**, and stopped at the epoch limit. Patience was **15**; the best epoch was **66**, so 14 subsequent epochs did not reach early stopping. Measurements:
+
+- CLI wall time: **2,653.0086 seconds** (44m 13s), including setup/doctor/finalization.
+- Runner training/final-validation time: **2,621.6203 seconds**; epoch CSV cumulative time: **2,612.4 seconds**.
+- Actual trainer: **cuda:0**, PyTorch **2.8.0+cu128**, torchvision **0.23.0+cu128**, Ultralytics **8.4.213**.
+- PyTorch peak allocated memory: **5,123,610,624 bytes**; peak reserved: **5,895,094,272 bytes**.
+- 1,276 nvidia-smi samples: whole-device peak **7,691 MiB**, sampled peak utilization **95%**, mean **15.11%**. These readings include other processes and are not an isolated throughput benchmark.
+
+`weights/best.pt` SHA256: `2ccf91ed1827aeb0fb5b35f4fec42d3127feddbe7b9d1f050be3a02426fc45c0`.
+
+`weights/last.pt` SHA256: `a51acdc5b1ba9133684f888fc115a337add31586f34cb4aef31aa9cb6ecd1e81`.
+
+The run preserves `results.csv`, `args.yaml`, `experiment.json`, loss/PR/confusion plots, training/validation examples and **80** per-epoch class records in `per-class-epochs.json`. Ultralytics invokes its fit callback again after final best-checkpoint validation and temporarily increments the epoch. That result is retained separately in `final-best-validation.json`, not counted as an 81st training epoch. The callback was corrected accordingly.
+
+### Identical checkpoint comparison
+
+```powershell
+python scripts/analyze_checkpoint.py --model runs/train/construction-ppe-12class-smoke-20261115/weights/best.pt --data data/local/construction-ppe.source.yaml --output runs/nohelmet-baseline/smoke-analysis
+python scripts/analyze_checkpoint.py --model runs/train/construction-ppe-12class-baseline80-20261115/weights/best.pt --data data/local/construction-ppe.source.yaml --output runs/nohelmet-baseline/baseline-analysis
+python scripts/compare_checkpoints.py --smoke runs/nohelmet-baseline/smoke-analysis --baseline runs/nohelmet-baseline/baseline-analysis --data data/local/construction-ppe.source.yaml --output runs/nohelmet-baseline/comparison.json
+```
+
+Analysis output directories must be new. Both evaluations use **imgsz=640, batch=8, device=0, workers=0, FP32, conf=0.001, NMS IoU=0.7, max_det=300, seed=42, deterministic=true, split=val**. Data YAML hashes and settings match. The comparison rejects protocol mismatches. The diagnostic matrix uses **confidence=0.25 / geometric matching IoU=0.5**, a different operating point from Ultralytics' reported precision/recall. Native training-time final validation can differ slightly; the controlled re-evaluations below are the comparison of record.
+
+Smoke -> baseline measured results:
+
+- Overall precision **0.603741 -> 0.906384**, recall **0.557464 -> 0.762866**.
+- Overall mAP50 **0.577715 -> 0.823290**, mAP50-95 **0.374450 -> 0.600881**.
+- Helmet precision **0.815944 -> 0.943081**, recall **0.775510 -> 0.845357**, AP50 **0.821962 -> 0.897458**, AP50-95 **0.615761 -> 0.719606**.
+- No_helmet precision **0.690276 -> 0.879578**, recall **0.223464 -> 0.659218**, AP50 **0.378585 -> 0.738653**, AP50-95 **0.214266 -> 0.456881**.
+
+At fixed confidence 0.25 / IoU 0.5, helmet TP/FN/FP changed **231/63/57 -> 251/43/27**; no_helmet **43/136/22 -> 125/54/30**. Wrong no_helmet-as-helmet assignments fell **34 -> 6**. Reverse helmet-as-no_helmet assignments increased **0 -> 6**. No_helmet FP increased at this threshold; recall improvement does not alone prove fewer false safety alerts.
+
+### Phase 3: one recommended next experiment
+
+**Recommend YOLO26s at imgsz=960**, retaining the source annotations, split, initialization, seed, schedule and augmentations. Measure memory before choosing a feasible batch and record any batch change. Compare recall/AP and memory/latency on the same validation set; retain a separate independent video test for later. This experiment has **not** been started.
+
+Baseline fixed-threshold no_helmet recall is **21/57 (0.3684)** below 8 pixels, **20/29 (0.6897)** at 8-16, **19/23 (0.8261)** at 16-32 and **65/70 (0.9286)** at 32+. Of 54 remaining misses/wrong classes, **36** are below 8 pixels. Higher resolution directly tests this observed failure mode. Upscaling cannot recover missing source detail; annotation noise remains unresolved.
+
+### Phase 4: adapter readiness and video blockers
+
+The best baseline checkpoint executed in `YoloDetector` on CUDA:0 with `Person->person`, `helmet->helmet`, `no_helmet->barehead`. Readiness was false before real inference and true afterward. Three real validation stills produced annotated images and `runs/nohelmet-baseline/adapter-readiness/readiness.json`; the predictor reported `cuda:0`, FP32, with actual mapped detections. This verifies checkpoint loading/mapping/execution, not video accuracy. The genuine saved-checkpoint GPU pytest passed (1 passed, 1 deselected).
+
+No genuine construction MP4 or manually reviewed CCTV recording is present. The frontend FFmpeg test-pattern fixture and backend generated video are synthetic integration assets, not proof of genuine video inference. Real MP4 ByteTrack identity stability, overlapping-worker association, temporal precision/recall, duplicate alerts, detection delay, false alerts per camera-hour, end-to-end FPS/latency and frame drops remain **unverified**. Next step: supply a licensed real construction MP4 and human-reviewed intervals; point a runtime YAML at the saved PPE checkpoint and explicit mapping; run `siteguard analyze --input <real.mp4> --config <runtime.local.yaml> --output runs/real-video-baseline`, then the documented event evaluation. No video results were invented.
+
+## Earlier one-epoch verification record
+
+The sections below preserve the input audit, environment repair and one-epoch smoke that preceded the authorized full baseline. Smoke-only readiness statements refer to that earlier checkpoint.
 
 ## Local input and root resolution
 

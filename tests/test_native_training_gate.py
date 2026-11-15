@@ -38,6 +38,11 @@ def test_native_source_keeps_names_checks_bytes_and_bounds_review_scope(tmp_path
     assert checked["sources"][0]["classes"] == {"0": "nohelmet"}
     with pytest.raises(ValueError, match="one-epoch smoke only"):
         validate_source_data(local_data, Path(cfg["report"]), smoke_only=False)
+    review = json.loads(review_file.read_text())
+    review.update(training_scope="baseline", authorized_by_user=True)
+    review_file.write_text(json.dumps(review))
+    validate_datasets(config)
+    assert validate_source_data(local_data, Path(cfg["report"]), smoke_only=False)["sources"][0]["review"]["kind"] == "agent_visual"
     (root/"labels/train/a.txt").write_text("0 .5 .5 .2 .2")
     with pytest.raises(ValueError, match="changed"):
         validate_source_data(local_data, Path(cfg["report"]), smoke_only=True)
