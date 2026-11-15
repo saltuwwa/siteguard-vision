@@ -89,9 +89,9 @@ def evaluate_events(predictions: Path, ground_truth: Path, output: Path,
             raise ValueError("Reviewed intervals overlap; camera-hour denominator would double count")
         exposure += sum(i.end-i.start for i in intervals)
     for incident in gt.incidents:
-        recording = recordings.get((incident.camera_id, incident.source_id))
-        if not recording or not any(i.start <= incident.start < incident.end <= i.end
-                                    for i in recording.reviewed_intervals):
+        coverage = recordings.get((incident.camera_id, incident.source_id))
+        if not coverage or not any(i.start <= incident.start < incident.end <= i.end
+                                    for i in coverage.reviewed_intervals):
             raise ValueError("Ground-truth incident outside reviewed recording coverage")
     if len({i.incident_id for i in gt.incidents}) != len(gt.incidents):
         raise ValueError("Ground-truth incident IDs must be unique")
@@ -109,14 +109,14 @@ def evaluate_events(predictions: Path, ground_truth: Path, output: Path,
         if identity is None:
             raise ValueError(f"Missing manually reviewed source/person correspondence: {key}")
         source_id = identity["source_id"]
-        recording = recordings.get((event.cameraid, source_id))
-        if recording is None:
+        coverage = recordings.get((event.cameraid, source_id))
+        if coverage is None:
             raise ValueError("Predicted source not in ground-truth manifest")
         if event.endtimestamp is None:
             raise ValueError("Finish recorded-video analysis before evaluating open events")
         if not any(i.start <= event.starttimestamp <= event.endtimestamp <= i.end
                    and i.start <= event.confirmedtimestamp <= i.end
-                   for i in recording.reviewed_intervals):
+                   for i in coverage.reviewed_intervals):
             excluded += 1
             continue
         pred.append((event, source_id, str(identity["person_id"])))

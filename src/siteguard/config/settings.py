@@ -49,7 +49,7 @@ class RuntimeConfig(StrictModel):
     cut_threshold: float = Field(0.65, ge=0, le=1)
     database_url: str = "sqlite:///runs/siteguard.sqlite"
     kafka_enabled: bool = False
-    rules: RulesConfig = Field(default_factory=RulesConfig)
+    rules: RulesConfig = Field(default_factory=lambda: RulesConfig())
 
 
 T = TypeVar("T", bound=BaseModel)
