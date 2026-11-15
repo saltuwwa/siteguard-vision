@@ -1,0 +1,12 @@
+stage: B
+model: yolo26s.pt
+data: data/built/baseline-b-v1/data.yaml
+name: stage-b-seed42
+seed: 42
+epochs: 100
+batch: 8
+imgsz: 640
+device: auto
+workers: 4
+amp: false
+reference_experiment: runs/train/stage-a-seed42/experiment.json

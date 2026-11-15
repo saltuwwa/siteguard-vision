@@ -1,0 +1,18 @@
+model: models/ppe-best.pt
+model_mapping:
+  person: person
+  helmet: helmet
+  barehead: barehead
+device: auto
+half: false
+confidence: 0.15
+imgsz: 640
+inference_fps: 8
+max_width: 1280
+queue_size: 8
+database_url: sqlite:///runs/siteguard.sqlite
+rules:
+  min_observations: 4
+  min_duration: 1.5
+  window_seconds: 4
+  max_gap: 0.8

@@ -1,0 +1,253 @@
+{
+  "$defs": {
+    "GroundTruthIncident": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "number"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "number"
+        },
+        "incident_id": {
+          "title": "Incident Id",
+          "type": "string"
+        },
+        "camera_id": {
+          "title": "Camera Id",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "person_id": {
+          "title": "Person Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "incident_id",
+        "camera_id",
+        "source_id",
+        "person_id"
+      ],
+      "title": "GroundTruthIncident",
+      "type": "object"
+    },
+    "Interval": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "number"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "Interval",
+      "type": "object"
+    },
+    "VideoObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "camera_id": {
+          "title": "Camera Id",
+          "type": "string"
+        },
+        "timestamp": {
+          "minimum": 0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "person_id": {
+          "title": "Person Id",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "helmet",
+            "barehead",
+            "unknown"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "occluded": {
+          "title": "Occluded",
+          "type": "boolean"
+        },
+        "visible": {
+          "title": "Visible",
+          "type": "boolean"
+        },
+        "box": {
+          "anyOf": [
+            {
+              "maxItems": 4,
+              "minItems": 4,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Box"
+        }
+      },
+      "required": [
+        "source_id",
+        "camera_id",
+        "timestamp",
+        "person_id",
+        "state",
+        "occluded",
+        "visible"
+      ],
+      "title": "VideoObservation",
+      "type": "object"
+    },
+    "VideoRecording": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "camera_id": {
+          "title": "Camera Id",
+          "type": "string"
+        },
+        "source_groups": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Groups",
+          "type": "array"
+        },
+        "reviewed_intervals": {
+          "items": {
+            "$ref": "#/$defs/Interval"
+          },
+          "minItems": 1,
+          "title": "Reviewed Intervals",
+          "type": "array"
+        },
+        "timestamp_basis": {
+          "enum": [
+            "decoder_pts",
+            "frame_index_fps",
+            "receive_monotonic"
+          ],
+          "title": "Timestamp Basis",
+          "type": "string"
+        },
+        "reviewer": {
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "reviewed_at": {
+          "minLength": 1,
+          "title": "Reviewed At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "camera_id",
+        "source_groups",
+        "reviewed_intervals",
+        "timestamp_basis",
+        "reviewer",
+        "reviewed_at"
+      ],
+      "title": "VideoRecording",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "label_origin": {
+      "const": "human_reviewed",
+      "title": "Label Origin",
+      "type": "string"
+    },
+    "recordings": {
+      "items": {
+        "$ref": "#/$defs/VideoRecording"
+      },
+      "minItems": 1,
+      "title": "Recordings",
+      "type": "array"
+    },
+    "incidents": {
+      "items": {
+        "$ref": "#/$defs/GroundTruthIncident"
+      },
+      "title": "Incidents",
+      "type": "array"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/VideoObservation"
+      },
+      "title": "Observations",
+      "type": "array"
+    },
+    "training_source_groups": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Training Source Groups",
+      "type": "array"
+    }
+  },
+  "required": [
+    "label_origin",
+    "recordings",
+    "incidents"
+  ],
+  "title": "VideoGroundTruth",
+  "type": "object"
+}

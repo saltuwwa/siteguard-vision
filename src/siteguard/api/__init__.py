@@ -1,0 +1,1 @@
+"""Authenticated headless REST endpoints."""

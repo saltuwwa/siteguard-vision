@@ -1,0 +1,196 @@
+{
+  "$defs": {
+    "SupportingObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "timestamp": {
+          "minimum": 0,
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "head_box": {
+          "anyOf": [
+            {
+              "maxItems": 4,
+              "minItems": 4,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Head Box"
+        }
+      },
+      "required": [
+        "timestamp",
+        "confidence"
+      ],
+      "title": "SupportingObservation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "eventid": {
+      "title": "Eventid",
+      "type": "string"
+    },
+    "cameraid": {
+      "title": "Cameraid",
+      "type": "string"
+    },
+    "streamsessionid": {
+      "title": "Streamsessionid",
+      "type": "string"
+    },
+    "trackid": {
+      "title": "Trackid",
+      "type": "integer"
+    },
+    "starttimestamp": {
+      "minimum": 0,
+      "title": "Starttimestamp",
+      "type": "number"
+    },
+    "endtimestamp": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Endtimestamp"
+    },
+    "confirmedtimestamp": {
+      "minimum": 0,
+      "title": "Confirmedtimestamp",
+      "type": "number"
+    },
+    "status": {
+      "default": "confirmed",
+      "enum": [
+        "confirmed",
+        "cleared",
+        "ended"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "endreason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Endreason"
+    },
+    "modelversion": {
+      "title": "Modelversion",
+      "type": "string"
+    },
+    "confidencesummary": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Confidencesummary",
+      "type": "object"
+    },
+    "observationcount": {
+      "minimum": 2,
+      "title": "Observationcount",
+      "type": "integer"
+    },
+    "evidenceimagepath": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Evidenceimagepath"
+    },
+    "evidencevideopath": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Evidencevideopath"
+    },
+    "createdat": {
+      "format": "date-time",
+      "title": "Createdat",
+      "type": "string"
+    },
+    "reviewstatus": {
+      "default": "pending",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "title": "Reviewstatus",
+      "type": "string"
+    },
+    "event_type": {
+      "const": "helmet_violation.confirmed",
+      "type": "string"
+    }
+  },
+  "required": [
+    "eventid",
+    "cameraid",
+    "streamsessionid",
+    "trackid",
+    "starttimestamp",
+    "confirmedtimestamp",
+    "modelversion",
+    "confidencesummary",
+    "observationcount",
+    "event_type"
+  ],
+  "title": "ViolationEvent",
+  "type": "object"
+}

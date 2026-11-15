@@ -1,0 +1,15 @@
+{
+  "source_dataset": "Ultralytics Construction-PPE, November 2026",
+  "source_image": "images/val/ultralytics-ppe-nov2026-021.jpg",
+  "source_sha256": "85f969fb964689ebc93037fd0ed2f5256b71e313294a72133cc047e8d6519a6a",
+  "source_license": "CC-BY-4.0",
+  "source_url": "https://docs.ultralytics.com/datasets/detect/construction-ppe/",
+  "checkpoint_sha256": "30d8e7c1fc1f632e88f05f81dbf7160ef377bfe42fa0bc431fd9e7fc869ac85e",
+  "model": "YOLO26s",
+  "epochs": 1,
+  "inference_imgsz": 640,
+  "confidence_threshold": 0.35,
+  "modified": "Resized, cropped for documentation and overlaid with actual predictions; only Person, helmet and no_helmet shown.",
+  "note": "Selected documentation example, not an accuracy measurement.",
+  "rendered_sha256": "d39f01151cab9ec75605287f929d8ea3042695e2fbc0528e40a86fa7086c0765"
+}

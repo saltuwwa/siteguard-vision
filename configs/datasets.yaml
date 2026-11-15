@@ -1,0 +1,39 @@
+# Run download, inspect the actual extracted archive, and adjust root/yaml_file.
+# All source classes must appear in mapping; null explicitly excludes a class.
+output: data/built/baseline-a-v1
+report: runs/dataset-report.json
+commercial: true
+allow_unknown_provenance: false
+near_duplicate_distance: 4
+sources:
+  - name: construction-ppe
+    root: data/raw/construction-ppe/extracted/construction-ppe
+    yaml_file: data/raw/construction-ppe/extracted/construction-ppe/data.yaml
+    review_file: data/reviews/construction-ppe.json
+    provenance_file: data/provenance/construction-ppe.json
+    mapping:
+      Person: person
+      helmet: helmet
+      no_helmet: barehead
+      gloves: null
+      vest: null
+      boots: null
+      goggles: null
+      no_goggle: null
+      no_gloves: null
+      no_boots: null
+      forklift: null
+      no_vest: null
+  - name: hard-hat-workers
+    enabled: false
+    # Keep the frozen Construction-PPE validation set identical for A/B.
+    include_splits: [train]
+    root: data/raw/hard-hat-workers/extracted
+    yaml_file: data/raw/hard-hat-workers/extracted/data.yaml
+    review_file: data/reviews/hard-hat-workers.json
+    provenance_file: data/provenance/hard-hat-workers.json
+    # Proposed values intentionally unset pending semantic review of selected export.
+    mapping:
+      head: null
+      helmet: null
+      person: null

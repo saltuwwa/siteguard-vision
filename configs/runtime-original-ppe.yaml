@@ -1,0 +1,7 @@
+# For a checkpoint trained directly on the inspected November 2026 source class names.
+model: models/source-ppe-best.pt
+model_mapping:
+  Person: person
+  helmet: helmet
+  no_helmet: barehead
+device: auto

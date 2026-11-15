@@ -1,0 +1,27 @@
+stage: A
+model: yolo26s.pt
+data: data/built/baseline-a-v1/data.yaml
+project: runs/train
+name: stage-a-seed42
+epochs: 100
+batch: 8
+imgsz: 640
+device: auto
+workers: 4
+seed: 42
+amp: false
+deterministic: true
+patience: 30
+resume: null
+tensorboard: false
+augmentation:
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.4
+  degrees: 0
+  translate: 0.1
+  scale: 0.5
+  fliplr: 0.5
+  flipud: 0
+  mosaic: 1
+  mixup: 0

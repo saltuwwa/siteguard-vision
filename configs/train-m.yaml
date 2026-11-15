@@ -1,0 +1,12 @@
+# Only run after A/B, on the same frozen evaluation sets.
+stage: comparison
+model: yolo26m.pt
+data: data/built/baseline-a-v1/data.yaml
+name: comparison-m-seed42
+seed: 42
+epochs: 100
+batch: 8
+imgsz: 640
+device: auto
+amp: false
+reference_experiment: runs/train/stage-a-seed42/experiment.json

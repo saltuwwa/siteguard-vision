@@ -1,0 +1,11 @@
+# Software and data licensing
+
+The repository's original code is offered under AGPL-3.0-or-later. The selected detector and ByteTrack adapter use Ultralytics, whose published distribution identifies AGPL-3.0 licensing. Ultralytics also offers an Enterprise license for commercial deployments under its terms. Commercial use is not categorically forbidden by AGPL; obligations depend on the way software is modified, combined, conveyed and accessed over a network. Resolve those obligations for your deployment rather than assuming private hosting eliminates them. Consult the [official Ultralytics licensing terms](https://www.ultralytics.com/license) and [GNU AGPL text](https://www.gnu.org/licenses/agpl-3.0.html), and obtain appropriate legal advice or an Enterprise agreement when necessary.
+
+An Ultralytics Enterprise agreement does not automatically relicense this repository's original code; arrange compatible rights for all components. Model weights, downstream trained checkpoints, dependencies and dataset rights must also be reviewed. No proprietary license rights are granted implicitly by this example implementation.
+
+Construction-PPE images/annotations are described by the [current official dataset documentation](https://docs.ultralytics.com/datasets/detect/construction-ppe/) as CC BY 4.0. Preserve attribution, the license link and a description of changes in derived datasets. The downloaded archive is authoritative for its version; verify it and record the checksum rather than relying on older dataset descriptions.
+
+Hard Hat Workers' [source page](https://universe.roboflow.com/joseph-nelson/hard-hat-workers) currently lists Public Domain. Verify the actual versioned export and original provenance, including any terms of the access provider. The manifest records the license you verified; it is not an automated legal determination. A repository software license for SHWD does not necessarily clear every image's rights. SH17's noncommercial CC BY-NC-SA 4.0 terms exclude it from the commercial pipeline by default.
+
+Real camera footage requires suitable authorization, worker privacy handling, retention and access controls. No model checkpoint, dataset or recording is included. Docker image and Python dependency licenses remain their respective authors' licenses.
