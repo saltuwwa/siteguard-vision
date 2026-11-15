@@ -839,5 +839,30 @@
     "No production tracking, association, event recall/precision, false alerts per camera-hour, latency or frame-drop measurements.",
     "Agent visual sample review is not exhaustive human annotation validation.",
     "Suspected source annotation noise and non-protective cap semantics remain unchanged."
-  ]
+  ],
+  "checks": {
+    "linux_ci": {
+      "status": "passed",
+      "run_id": 43746319490,
+      "pytest_passed": 42,
+      "pytest_skipped": 2,
+      "ruff": "passed",
+      "mypy": "no issues in 8 source files",
+      "real_bytetrack_cpu_job": "passed"
+    },
+    "windows_pytest": {
+      "assertions_passed": 41,
+      "skipped": 3,
+      "status": "intermittent native shutdown failure after passing assertions",
+      "failure_exit_code": "0xC0000008",
+      "thread_limit_mitigation": "not reliable; not retained",
+      "individual_video_test_files": "exit 0"
+    },
+    "genuine_baseline_gpu_smoke": {
+      "passed": 1,
+      "deselected": 1,
+      "exit_code": 0
+    },
+    "local_lint_tools": "Ruff/mypy missing; package-index DNS unavailable; checked successfully in Linux CI"
+  }
 }

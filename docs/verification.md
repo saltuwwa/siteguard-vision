@@ -1,4 +1,4 @@
-# Dataset validation and CUDA training verification — 2026-11-15
+# Dataset validation and CUDA baseline verification - 2026-11-15
 
 The unchanged 12-class dataset passed integrity checks. After the one-epoch smoke, the user-requested **80-epoch YOLO26s baseline completed on CUDA:0**. Repeated validation increased `no_helmet` recall from **0.22346 to 0.65922** and overall mAP50–95 from **0.37445 to 0.60088**. These are development validation results, not independent test or production event performance. The checkpoint executes in the SiteGuard adapter. Genuine MP4 evaluation remains blocked by absent construction video assets.
 
@@ -26,6 +26,15 @@ Source labels were not edited. This is an agent visual spot-check, not an exhaus
 
 Activate the CUDA-enabled `.venv` first; `python` and `siteguard` must resolve there. Use the gitignored resolved source data YAML and validation report described in the earlier audit below.
 
+For a fresh environment reproducing the actual baseline dependency profile
+(requires working package-index access):
+
+```powershell
+python -m pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu128
+python -m pip install -e '.[dev,ml-cu128]' ultralytics==8.4.213
+siteguard doctor
+```
+
 ```powershell
 $env:YOLO_CONFIG_DIR=Join-Path (Get-Location) 'runs/ultralytics-config'
 $env:YOLO_AUTOINSTALL='false'
@@ -49,7 +58,7 @@ Training exited **0**, completed **80 epochs**, and stopped at the epoch limit. 
 
 `weights/last.pt` SHA256: `a51acdc5b1ba9133684f888fc115a337add31586f34cb4aef31aa9cb6ecd1e81`.
 
-The run preserves `results.csv`, `args.yaml`, `experiment.json`, loss/PR/confusion plots, training/validation examples and **80** per-epoch class records in `per-class-epochs.json`. Ultralytics invokes its fit callback again after final best-checkpoint validation and temporarily increments the epoch. That result is retained separately in `final-best-validation.json`, not counted as an 81st training epoch. The callback was corrected accordingly.
+The run preserves `results.csv`, `args.yaml`, `experiment.json`, loss/PR/confusion plots, training/validation examples and **80** per-epoch class records in `per-class-epochs.json`. The controlled re-evaluation's `metrics.json` is also copied into the training directory and identified in `experiment.json`. Ultralytics invokes its fit callback again after final best-checkpoint validation and temporarily increments the epoch. That result is retained separately in `final-best-validation.json`, not counted as an 81st training epoch. The callback was corrected accordingly.
 
 ### Identical checkpoint comparison
 
@@ -59,7 +68,7 @@ python scripts/analyze_checkpoint.py --model runs/train/construction-ppe-12class
 python scripts/compare_checkpoints.py --smoke runs/nohelmet-baseline/smoke-analysis --baseline runs/nohelmet-baseline/baseline-analysis --data data/local/construction-ppe.source.yaml --output runs/nohelmet-baseline/comparison.json
 ```
 
-Analysis output directories must be new. Both evaluations use **imgsz=640, batch=8, device=0, workers=0, FP32, conf=0.001, NMS IoU=0.7, max_det=300, seed=42, deterministic=true, split=val**. Data YAML hashes and settings match. The comparison rejects protocol mismatches. The diagnostic matrix uses **confidence=0.25 / geometric matching IoU=0.5**, a different operating point from Ultralytics' reported precision/recall. Native training-time final validation can differ slightly; the controlled re-evaluations below are the comparison of record.
+Analysis output directories must be new. Both evaluations use **imgsz=640, batch=8, device=0, workers=0, FP32, conf=0.001, iou=0.7 (native validator setting), max_det=300, seed=42, deterministic=true, split=val**. Data YAML hashes and settings match. The comparison rejects protocol mismatches. The diagnostic matrix uses **confidence=0.25 / geometric matching IoU=0.5**, a different operating point from Ultralytics' reported precision/recall. Native training-time final validation can differ slightly; the controlled re-evaluations below are the comparison of record.
 
 Smoke -> baseline measured results:
 
@@ -78,9 +87,39 @@ Baseline fixed-threshold no_helmet recall is **21/57 (0.3684)** below 8 pixels, 
 
 ### Phase 4: adapter readiness and video blockers
 
-The best baseline checkpoint executed in `YoloDetector` on CUDA:0 with `Person->person`, `helmet->helmet`, `no_helmet->barehead`. Readiness was false before real inference and true afterward. Three real validation stills produced annotated images and `runs/nohelmet-baseline/adapter-readiness/readiness.json`; the predictor reported `cuda:0`, FP32, with actual mapped detections. This verifies checkpoint loading/mapping/execution, not video accuracy. The genuine saved-checkpoint GPU pytest passed (1 passed, 1 deselected).
+The best baseline checkpoint executed in `YoloDetector` on CUDA:0 with `Person->person`, `helmet->helmet`, `no_helmet->barehead`. Readiness was false before real inference and true afterward. Three actual validation images from the mixed-provenance dataset produced annotated images and `runs/nohelmet-baseline/adapter-readiness/readiness.json`; the predictor reported `cuda:0`, FP32, with actual mapped detections. This verifies checkpoint loading/mapping/execution, not video accuracy. The genuine saved-checkpoint GPU pytest passed (1 passed, 1 deselected).
 
-No genuine construction MP4 or manually reviewed CCTV recording is present. The frontend FFmpeg test-pattern fixture and backend generated video are synthetic integration assets, not proof of genuine video inference. Real MP4 ByteTrack identity stability, overlapping-worker association, temporal precision/recall, duplicate alerts, detection delay, false alerts per camera-hour, end-to-end FPS/latency and frame drops remain **unverified**. Next step: supply a licensed real construction MP4 and human-reviewed intervals; point a runtime YAML at the saved PPE checkpoint and explicit mapping; run `siteguard analyze --input <real.mp4> --config <runtime.local.yaml> --output runs/real-video-baseline`, then the documented event evaluation. No video results were invented.
+No genuine construction MP4 or manually reviewed CCTV recording is present. The frontend FFmpeg test-pattern fixture and backend generated video are synthetic integration assets, not proof of genuine video inference. Real MP4 ByteTrack identity stability, overlapping-worker association, temporal precision/recall, duplicate alerts, detection delay, false alerts per camera-hour, end-to-end FPS/latency and frame drops remain **unverified**. A validated, gitignored `configs/runtime-baseline.local.yaml` now points at the real best checkpoint and explicit source-class map. After supplying a licensed construction MP4 and reviewed intervals, run:
+
+```powershell
+siteguard analyze --input '<real-construction.mp4>' --config configs/runtime-baseline.local.yaml --output runs/real-video-baseline
+```
+
+Then perform the documented event evaluation. No video results were invented.
+
+### Final checks and publication
+
+The post-training dataset validation exited **0** with `errors: []`, `leakage_pairs: 0`, `review_required: false`. This does not prove source independence or exhaustively correct semantics. Original image/label hashes remain bound to the audit; source annotations were not modified.
+
+```powershell
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'
+$env:OMP_NUM_THREADS='1'
+$env:OPENBLAS_NUM_THREADS='1'
+$env:MKL_NUM_THREADS='1'
+python -m pytest -q --basetemp runs/nohelmet-baseline/thread-limited-final
+python -m compileall -q src scripts
+$env:SITEGUARD_GPU_MODEL=Join-Path (Get-Location) 'runs/train/construction-ppe-12class-baseline80-20261115/weights/best.pt'
+$env:SITEGUARD_GPU_MAPPING='data/local/ppe-mapping.json'
+python -m pytest tests/test_optional_ml.py -m gpu -q --basetemp runs/nohelmet-baseline/gpu-tests-new
+```
+
+Local core tests report **41 passed, 3 skipped**. Compilation passed. The genuine best-checkpoint GPU test passed separately with **exit 0** (1 passed, 1 deselected). CPU ByteTrack executes in the local suite. The two Windows HTTP skips run in Linux CI; GPU testing is opt-in. The new diagnostic unit test uses synthetic boxes only to verify the 12-class confusion bookkeeping, wrong assignments, duplicates and misses; it does not measure model accuracy.
+
+This Windows environment intermittently terminates during shutdown with **3221225480 / 0xC0000008**, despite all assertions passing. Isolation reproduced this with combined video tests; each video test file separately exited 0. Limiting OpenCV's own threads did not resolve it. BLAS/OpenMP thread limits produced one exit-0 full run, but a repeat with JUnit still failed at shutdown, so this is **not a verified fix**. The unsuccessful thread-limit workaround was not retained in the check runner. Cached OpenCV 4.11 and FFmpeg thread/backend overrides also failed to resolve the shutdown fault; no package upgrade was retained. Production training/inference thread settings were not changed. Isolation results and JUnit/logs are retained in `runs/nohelmet-baseline/`. The Linux CI suite below completed cleanly.
+
+Local Ruff/mypy remain unavailable because package-index DNS access fails; `scripts/check.py` honestly exits 1 for their missing modules. The same actual code passed both on the connected GitHub runner: **Ruff: all checks passed; mypy: no issues in 8 source files; pytest: 42 passed, 2 skipped**, plus the separate real CPU ByteTrack job. See [baseline CI run](https://github.com/saltuwwa/siteguard-vision/actions/runs/43746319490). Pydantic default declarations and reused optional coverage variables were corrected to satisfy type checking. No local lint success is inferred from absent tools.
+
+The first version and genuine README detection photo are published at [saltuwwa/siteguard-vision](https://github.com/saltuwwa/siteguard-vision). The selected photo retains its honest one-epoch caption and CC BY 4.0 source attribution. The baseline report is public; raw data, weights, private source URLs and local configurations are excluded. No new infrastructure or frontend functionality was developed in this baseline task.
 
 ## Earlier one-epoch verification record
 

@@ -6,7 +6,7 @@
 
 Construction helmet analytics: MP4/RTSP → detector → ByteTrack → conservative head association → temporal confirmation → evidence, SQLite/PostgreSQL and an optional durable Kafka outbox. The processing backend and API run headlessly. An existing optional frontend prototype is included separately in `frontend/`; excavator analytics are outside this version.
 
-**v0.1.0 status:** dataset integrity validation and genuine one-epoch CUDA training/inference have completed. Real recorded-video event evaluation is still pending. The frontend defaults to explicitly marked mock/demo data; its displayed events and charts are not model evaluation results. See [verification](docs/verification.md) for measured results and remaining limitations.
+**v0.1.0 status:** dataset integrity validation, a genuine 80-epoch YOLO26s CUDA baseline and saved-checkpoint adapter inference have completed. On the official development validation split, no_helmet recall improved from 0.223 to 0.659; this is not independent test or production event performance. Real recorded-video evaluation is still pending. The frontend defaults to explicitly marked mock/demo data; its displayed events and charts are not model evaluation results. See [verification](docs/verification.md) for measured results and remaining limitations.
 
 Prototype commands and dependencies are defined in [frontend/package.json](frontend/package.json).
 
