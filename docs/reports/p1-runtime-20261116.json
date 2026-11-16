@@ -18,9 +18,9 @@
           "helmet": 300
         },
         "head_attempts": 479,
-        "accepted": 322,
+        "accepted": 324,
         "accepted_by_class": {
-          "barehead": 99,
+          "barehead": 101,
           "helmet": 223
         },
         "rejected_by_class": {
@@ -38,19 +38,19 @@
             "ambiguous_person_association": 1,
             "person_confidence_too_low": 2,
             "no_matching_person": 1,
-            "multiple_distinct_heads": 4
+            "duplicate_head_prediction": 2
           }
         },
         "barehead_annotation_relative_iou50": {
           "annotation_tp": 131,
           "annotation_tp_accepted_to_some_person": 95,
           "annotation_fp": 48,
-          "annotation_fp_not_accepted": 44,
+          "annotation_fp_not_accepted": 42,
           "annotation_fp_below_association_confidence": 41,
           "annotation_tp_not_accepted": 36,
           "annotation_tp_below_association_confidence": 25,
           "annotation_tp_below_size_after_confidence": 6,
-          "annotation_fp_accepted_to_some_person": 4
+          "annotation_fp_accepted_to_some_person": 6
         },
         "rejected_by_reason": {
           "low_detection_confidence": 128,
@@ -59,12 +59,11 @@
           "no_matching_person": 3,
           "ambiguous_person_association": 4,
           "head_clipped": 2,
-          "multiple_distinct_heads": 4
+          "duplicate_head_prediction": 2
         },
         "unknown_workers": {
           "no_visible_head": 197,
-          "ambiguous_person_association": 4,
-          "multiple_distinct_heads": 2
+          "ambiguous_person_association": 4
         }
       },
       {
@@ -75,9 +74,9 @@
           "helmet": 300
         },
         "head_attempts": 479,
-        "accepted": 336,
+        "accepted": 338,
         "accepted_by_class": {
-          "barehead": 105,
+          "barehead": 107,
           "helmet": 231
         },
         "rejected_by_class": {
@@ -93,18 +92,18 @@
             "ambiguous_person_association": 1,
             "person_confidence_too_low": 2,
             "no_matching_person": 1,
-            "multiple_distinct_heads": 4
+            "duplicate_head_prediction": 2
           }
         },
         "barehead_annotation_relative_iou50": {
           "annotation_tp": 131,
           "annotation_tp_accepted_to_some_person": 101,
           "annotation_fp": 48,
-          "annotation_fp_not_accepted": 44,
+          "annotation_fp_not_accepted": 42,
           "annotation_fp_below_association_confidence": 41,
           "annotation_tp_not_accepted": 30,
           "annotation_tp_below_association_confidence": 25,
-          "annotation_fp_accepted_to_some_person": 4
+          "annotation_fp_accepted_to_some_person": 6
         },
         "rejected_by_reason": {
           "low_detection_confidence": 128,
@@ -112,12 +111,11 @@
           "no_matching_person": 3,
           "ambiguous_person_association": 4,
           "head_clipped": 1,
-          "multiple_distinct_heads": 4
+          "duplicate_head_prediction": 2
         },
         "unknown_workers": {
           "no_visible_head": 183,
-          "ambiguous_person_association": 4,
-          "multiple_distinct_heads": 2
+          "ambiguous_person_association": 4
         }
       }
     ]
@@ -441,5 +439,252 @@
     "Before/after synthetic runs used different GPUs and background loads and do not prove an optimization speedup.",
     "Association accepted-to-some-person counts do not establish correct worker identity.",
     "Private frames, source paths and video files are not included in Git."
-  ]
+  ],
+  "genuine_adapter_recheck": {
+    "scope": "actual mixed-provenance validation images, not video or independent quality evaluation",
+    "results": [
+      {
+        "device": "cuda:0",
+        "half": false,
+        "ready": true,
+        "source": "ultralytics-ppe-nov2026-021.jpg",
+        "counts": {
+          "helmet": 1,
+          "person": 2,
+          "barehead": 1
+        },
+        "previous_gpu_counts": {
+          "helmet": 1,
+          "person": 2,
+          "barehead": 1
+        },
+        "seconds": 0.3164645999968343,
+        "end2end_backend": false,
+        "native_nms_setting": null,
+        "quantize_setting": 32
+      },
+      {
+        "device": "cuda:0",
+        "half": false,
+        "ready": true,
+        "source": "source-38d248f0e2100035cc7c30a81392baa8.jpg",
+        "counts": {
+          "person": 4,
+          "helmet": 2,
+          "barehead": 3
+        },
+        "previous_gpu_counts": {
+          "person": 4,
+          "helmet": 2,
+          "barehead": 3
+        },
+        "seconds": 0.04068170000027749,
+        "end2end_backend": false,
+        "native_nms_setting": null,
+        "quantize_setting": 32
+      },
+      {
+        "device": "cuda:0",
+        "half": false,
+        "ready": true,
+        "source": "source-485eb05877af0e242d34e297d390c7cd.jpg",
+        "counts": {
+          "person": 8,
+          "helmet": 5,
+          "barehead": 1
+        },
+        "previous_gpu_counts": {
+          "person": 8,
+          "helmet": 5,
+          "barehead": 1
+        },
+        "seconds": 0.01627809999990859,
+        "end2end_backend": false,
+        "native_nms_setting": null,
+        "quantize_setting": 32
+      },
+      {
+        "device": "cpu",
+        "half": false,
+        "ready": true,
+        "source": "ultralytics-ppe-nov2026-021.jpg",
+        "counts": {
+          "helmet": 1,
+          "person": 2,
+          "barehead": 1
+        },
+        "previous_gpu_counts": {
+          "helmet": 1,
+          "person": 2,
+          "barehead": 1
+        },
+        "seconds": 0.3743061999994097,
+        "end2end_backend": false,
+        "native_nms_setting": null,
+        "quantize_setting": 32
+      }
+    ]
+  },
+  "ci": {
+    "commit": "ca576f4ad739ca2d928849533a4b9444fcefe0de",
+    "run_id": 43874602571,
+    "status": "passed",
+    "ruff": "all checks passed",
+    "mypy": "8 source files, no issues",
+    "core": "61 passed,5 skipped",
+    "optional_ml_cpu": "4 passed,1 deselected"
+  },
+  "association_review": {
+    "samples": [
+      "ultralytics-ppe-nov2026-324.jpg",
+      "ultralytics-ppe-nov2026-525.jpg"
+    ],
+    "finding": "Nested scalp/full-head predictions for the same visible bare head. IoU alone falsely suggests separate heads; accept same-class nesting with overlap/min-area>=0.8. Distinct spatial heads still UNKNOWN.",
+    "limitation": "Two accepted heads count as annotation-relative FP because of localization/matching semantics; this is not proof of two false physical safety alerts."
+  },
+  "preprocessing_ablation": {
+    "scope": "paired per-image development object diagnostic, not video or event accuracy",
+    "model_sha256": "2ccf91ed1827aeb0fb5b35f4fec42d3127feddbe7b9d1f050be3a02426fc45c0",
+    "data_yaml_sha256": "b6de6ab5b932022559ec5c00ec8f7332fa93c61a23927d4bd523ba7494974494",
+    "imgsz": 640,
+    "device": "0",
+    "half": false,
+    "batch": 1,
+    "confidence": 0.001,
+    "diagnostic_confidence": 0.25,
+    "diagnostic_iou": 0.5,
+    "runs": [
+      {
+        "max_width": null,
+        "interpolation": null,
+        "resized_images": 0,
+        "wall_seconds_including_image_io": 15.215255300001445,
+        "fixed_counts": {
+          "helmet": {
+            "tp": 254,
+            "fn": 40,
+            "fp": 25
+          },
+          "no_helmet": {
+            "tp": 124,
+            "fn": 55,
+            "fp": 32
+          }
+        }
+      },
+      {
+        "max_width": 1280,
+        "interpolation": 1,
+        "resized_images": 171,
+        "wall_seconds_including_image_io": 14.253985000003013,
+        "fixed_counts": {
+          "helmet": {
+            "tp": 253,
+            "fn": 41,
+            "fp": 18
+          },
+          "no_helmet": {
+            "tp": 126,
+            "fn": 53,
+            "fp": 28
+          }
+        }
+      },
+      {
+        "max_width": 1280,
+        "interpolation": 3,
+        "resized_images": 171,
+        "wall_seconds_including_image_io": 14.841709000000264,
+        "fixed_counts": {
+          "helmet": {
+            "tp": 255,
+            "fn": 39,
+            "fp": 20
+          },
+          "no_helmet": {
+            "tp": 126,
+            "fn": 53,
+            "fp": 28
+          }
+        }
+      }
+    ]
+  },
+  "preprocessing_decision": "Default width1280 and linear interpolation retained. Area does not improve no_helmet fixed counts; native-size does not automatically improve detector quality. max_width:null remains an explicit diagnostic option.",
+  "memory_probe_process_notes": {
+    "initial_cuda1_shell_exit": 1,
+    "initial_metrics_saved": true,
+    "raw_initial_exit_code": "not captured by original shell wrapper; do not infer a specific code",
+    "repeat_cuda0": {
+      "returncode": 0,
+      "scope": "native-shutdown investigation, three unsaved batches on otherwise free CUDA0; no model-quality experiment",
+      "metrics_saved": true
+    },
+    "training_cuda1_batch8_fit": "verified ongoing actual training, ~13.4GiB native training GPU memory log"
+  },
+  "windows_capture_investigation": {
+    "short_comparison": [
+      {
+        "capture": "fd",
+        "returncode": 3221225480,
+        "log": "capture-fd-0.log"
+      },
+      {
+        "capture": "sys",
+        "returncode": 0,
+        "log": "capture-sys-1.log"
+      },
+      {
+        "capture": "no",
+        "returncode": 0,
+        "log": "capture-no-2.log"
+      },
+      {
+        "capture": "sys",
+        "returncode": 0,
+        "log": "capture-sys-3.log"
+      },
+      {
+        "capture": "no",
+        "returncode": 0,
+        "log": "capture-no-4.log"
+      }
+    ],
+    "full_sys_repeats": [
+      {
+        "repeat": 0,
+        "returncode": 0,
+        "tail": [
+          ".                                                                        [100%]",
+          "70 passed, 3 skipped in 15.94s",
+          "[mov,mp4,m4a,3gp,3g2,mj2 @ 0000022179521b40] moov atom not found"
+        ]
+      },
+      {
+        "repeat": 1,
+        "returncode": 0,
+        "tail": [
+          ".                                                                        [100%]",
+          "70 passed, 3 skipped in 12.49s",
+          "[mov,mp4,m4a,3gp,3g2,mj2 @ 00000156ab68dbc0] moov atom not found"
+        ]
+      },
+      {
+        "repeat": 2,
+        "returncode": 0,
+        "tail": [
+          ".                                                                        [100%]",
+          "70 passed, 3 skipped in 12.67s",
+          "[mov,mp4,m4a,3gp,3g2,mj2 @ 000002966404e940] moov atom not found"
+        ]
+      }
+    ],
+    "decision": "pytest addopts=--capture=sys; assertions unchanged, native stderr visible; exact native library root cause remains undiagnosed"
+  },
+  "640_revalidation": {
+    "metrics_exactly_match_original": true,
+    "checkpoint_unchanged": true,
+    "validation_content_sha256": "8a81b773155277c56983945a04f47ea266b0e28f9c87256c58ddfea840cca3b5",
+    "output": "runs/p1-20261116/eval640"
+  }
 }

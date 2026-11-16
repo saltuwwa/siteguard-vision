@@ -174,7 +174,7 @@ class VideoReader:
                         new_height = max(2, round(height * self.config.max_width / width))
                         with self.performance.measure("decode_resize"):
                             image = cv2.resize(image, (self.config.max_width, new_height),
-                                               interpolation=cv2.INTER_AREA)
+                                               interpolation=cv2.INTER_LINEAR)
                     self.metrics.sampled += 1
                     self._enqueue(Frame(image, pts, datetime.now(UTC), time.monotonic(),
                                         self.camera_id, session, index, basis, raw_pts, original_shape))

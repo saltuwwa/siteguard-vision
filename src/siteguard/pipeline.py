@@ -23,7 +23,7 @@ from siteguard.events.schema import ViolationEvent
 from siteguard.events.sink import EventSink
 from siteguard.storage.database import EventStore
 from siteguard.inference.base import ImageArray
-from siteguard.diagnostics import PipelineDiagnostics, StageTimings, Timing
+from siteguard.diagnostics import PipelineDiagnostics, StageTimings, Timing, gpu_memory_snapshot
 from siteguard.tracking.association import AssociationDiagnostics
 from siteguard.rules.temporal import State
 
@@ -35,6 +35,7 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
         raise ValueError("Output directory must be new or empty")
     output.mkdir(parents=True, exist_ok=True)
     metadata = {"camera_id": camera_id, "source_type": "rtsp" if live else "file",
+                "max_frames": max_frames,
                 "source_file_sha256": sha256(Path(source)) if not live and Path(source).is_file() else None,
                 "model_version": detector.version,
                 "effective_device": getattr(detector, "device", "injected-test-detector"),
@@ -46,6 +47,7 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
     started = time.monotonic()
     diagnostics, performance, latency = PipelineDiagnostics(), StageTimings(), Timing()
     temporal_reasons: Counter[str] = Counter()
+    event_end_reasons: Counter[str] = Counter()
     count = 0
     tracker = tracker or ByteTracker(config.inference_fps, config.track_buffer_seconds)
     engine: ViolationEngine | None = None
@@ -74,7 +76,7 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                 if event.status != "confirmed":
                     event_ids.discard(event.eventid)
                     diagnostics.counts[f"{event.status}_events"] += 1
-                    temporal_reasons[event.endreason or event.status] += 1
+                    event_end_reasons[event.endreason or event.status] += 1
                     if event.endreason in {"track_lost", "evidence_lost"}:
                         diagnostics.counts["expired_events"] += 1
 
@@ -110,7 +112,7 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                     engine = ViolationEngine(camera_id, uuid4().hex, detector.version, config.rules)
                     logging.getLogger("siteguard.pipeline").info("tracking_session_started", extra={
                         "cameraid": camera_id, "sessionid": engine.session_id,
-                        "reason": "camera_cut" if cut else "new_source_or_gap"})
+                        "reason": reset_reason})
                 previous_histogram = histogram
                 last_timestamp = frame.source_timestamp
                 with performance.measure("detector_inference"):
@@ -136,7 +138,8 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                     for item in evidence.values():
                         updates.extend(engine.observe(frame.source_timestamp, item))
                     updates.extend(engine.tick(frame.source_timestamp, set(evidence)))
-                temporal_reasons["retired_tracks"] += len(before_ids-set(engine.tracks))
+                retired = len(before_ids-set(engine.tracks))
+                diagnostics.counts["expired_tracks"] += retired
                 persist(updates, frame.image)
                 unknown = Counter(item.reason for item in evidence.values() if item.state == "unknown")
                 suspected = sum(engine.tracks[p.track_id].state == State.SUSPECT for p in people)
@@ -156,7 +159,11 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                     "temporal_insufficient_evidence": decisions["insufficient_temporal_evidence"],
                     "confirmed_events": sum(e.status == "confirmed" and
                         e.confirmedtimestamp == frame.source_timestamp for e in updates),
+                    "active_confirmed_incidents": len(event_ids),
                     "closed_events": sum(e.status != "confirmed" for e in updates),
+                    "cleared_events": sum(e.status == "cleared" for e in updates),
+                    "expired_events": sum(e.endreason in {"track_lost", "evidence_lost"} for e in updates),
+                    "expired_tracks": retired,
                     "tracking_reset_reason": reset_reason})
                 if reader.metrics.source_fps > 0:
                     video.fps = min(config.inference_fps, reader.metrics.source_fps)
@@ -186,9 +193,10 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                 diagnostics.counts["processed_frames"] += 1
                 latency.add(time.monotonic()-frame.decoded_monotonic)
                 if count % max(1, round(config.inference_fps)) == 0:
-                    store.update_camera(camera_id, session_id, {"state": "running",
-                        "modelversion": detector.version, "processed_frames": count,
-                        "ingestion": asdict(reader.metrics)})
+                    with performance.measure("camera_heartbeat"):
+                        store.update_camera(camera_id, session_id, {"state": "running",
+                            "modelversion": detector.version, "processed_frames": count,
+                            "ingestion": asdict(reader.metrics)})
                 if max_frames and count >= max_frames:
                     break
         except KeyboardInterrupt:
@@ -200,7 +208,8 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
             cleanup_errors: list[Exception] = []
             try:
                 if engine:
-                    persist(engine.finish("processing_error" if failure else "source_ended"))
+                    persist(engine.finish("processing_interrupted" if failure == "Interrupted" else
+                                          "processing_error" if failure else "source_ended"))
             except Exception as exc:
                 cleanup_errors.append(exc)
             for component in (reader, video, sink):
@@ -218,16 +227,7 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
             except Exception as exc:
                 cleanup_errors.append(exc)
                 failure = failure or type(exc).__name__
-            gpu = None
-            device = str(getattr(detector, "device", "cpu")).removeprefix("cuda:")
-            if device.isdigit():
-                import torch
-                if torch.cuda.is_available():
-                    gpu = {"device": int(device), "allocated_bytes": torch.cuda.memory_allocated(int(device)),
-                        "reserved_bytes": torch.cuda.memory_reserved(int(device)),
-                        "peak_allocated_bytes": torch.cuda.max_memory_allocated(int(device)),
-                        "peak_reserved_bytes": torch.cuda.max_memory_reserved(int(device)),
-                        "scope": "process allocator since last reset; includes model initialization"}
+            gpu = gpu_memory_snapshot(str(getattr(detector, "device", "cpu")))
             duration = time.monotonic()-started
             latency_report = latency.report()
             summary = {"processed_frames": count, "elapsed_seconds": duration,
@@ -241,6 +241,8 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                 "kafka": "outbox_pending_external_publisher" if config.kafka_enabled else "disabled",
                 "accuracy_metrics": None, "accuracy_note": "No ground truth provided",
                 "status": "failed" if failure else "completed", "failure": failure,
+                "stopped_after_frame_limit": bool(max_frames and count >= max_frames),
+                "unprocessed_sampled_frames": max(0, reader.metrics.sampled-reader.metrics.dropped-count),
                 "cleanup_errors": [type(exc).__name__ for exc in cleanup_errors],
                 "performance": {"main_thread": performance.report(),
                     "decoder_thread": reader.performance.report() if hasattr(reader, "performance") else {},
@@ -251,6 +253,7 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                     "scope": "includes cold inference; concurrent thread totals overlap"}}
             report = diagnostics.report()
             report["temporal_reasons"] = dict(temporal_reasons)
+            report["event_end_reasons"] = dict(event_end_reasons)
             write_json(output/"diagnostics.json", report)
             write_json(output/"summary.json", summary)
             write_json(output/"metrics.json", summary)

@@ -1,5 +1,6 @@
 import hashlib
 import os
+import math
 from pathlib import Path
 
 from siteguard.config.settings import RuntimeConfig
@@ -63,6 +64,9 @@ class YoloDetector:
                 result.boxes.conf.cpu().tolist(), result.boxes.cls.cpu().tolist(), strict=True):
             label = self.config.model_mapping.get(result.names[int(cls)])
             if label:
+                if (not all(math.isfinite(v) for v in (*box, confidence))
+                        or not 0 <= confidence <= 1 or box[2] <= box[0] or box[3] <= box[1]):
+                    raise RuntimeError("Detector returned invalid mapped geometry or confidence")
                 detections.append(Detection((box[0], box[1], box[2], box[3]), float(confidence), label))
         self.ready = True
         return detections

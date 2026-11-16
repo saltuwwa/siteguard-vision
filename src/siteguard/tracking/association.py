@@ -113,8 +113,14 @@ def associate_heads(people: list[PersonTrack], detections: list[Detection],
                 a, b = best.box, other.box
                 intersection = max(0., min(a[2], b[2])-max(a[0], b[0])) * max(
                     0., min(a[3], b[3])-max(a[1], b[1]))
-                union = (a[2]-a[0])*(a[3]-a[1])+(b[2]-b[0])*(b[3]-b[1])-intersection
-                if union <= 0 or intersection/union < .5:
+                area_a, area_b = (a[2]-a[0])*(a[3]-a[1]), (b[2]-b[0])*(b[3]-b[1])
+                union = area_a+area_b-intersection
+                # Native no_helmet predictions can localize scalp and full head
+                # separately. Nested same-class boxes are one head even if IoU
+                # is small; two spatially separate heads remain unsafe.
+                duplicate = union > 0 and (intersection/union >= .5 or
+                    intersection/min(area_a, area_b) >= .8)
+                if not duplicate:
                     reason = "multiple_distinct_heads"
                     break
         if reason:

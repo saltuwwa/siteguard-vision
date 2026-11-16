@@ -9,15 +9,28 @@ No frontend source or endpoint schema was changed.
 ## P1 measured findings
 
 At fixed genuine 640px validation predictions and decoder width1280, association accepted
-322/479 heads (99 bare heads, 223 helmets). It rejected128 heads below confidence0.6 and
+324/479 heads (101 bare heads, 223 helmets). It rejected128 heads below confidence0.6 and
 13 below12 decoded pixels. Among131 annotation-relative no_helmet TP predictions at detector
 confidence0.15 / IoU0.5, 36 were not accepted:25 were below association confidence and6
 failed size after passing confidence. The same confidence gate also rejected41/48
 annotation-relative bare-head FP predictions. Blindly lowering confidence would trade
 misses against additional false head evidence. With native-size coordinates, 101 rather
-than95 annotation-relative TP bare heads reached some person; four FP bare heads reached
-some person in either scenario. Correct worker identity is not labeled by this analysis.
+than95 annotation-relative TP bare heads reached some person; six FP bare heads reached
+some person in either scenario. Correct worker identity is not labeled by this analysis. Visual review of images324/525
+found nested scalp/full-head predictions, so the duplicate guard uses intersection over
+the smaller box as well as IoU. Those localization differences can be annotation-relative
+FPs even when the physical bare head is visible. Two distinct spatial heads remain UNKNOWN.
 The12px gate is in decoded pixels, not model-input pixels. No source annotations changed.
+
+A separate genuine per-image inference ablation used the same640px checkpoint on all200
+validation images (batch1,FP32,conf0.001; diagnostic threshold0.25/IoU0.5).171 images
+were wider than1280. Native-size input gave no_helmet TP/FN/FP124/55/32; width1280
+with either linear or area resizing gave126/53/28. Helmet counts were254/40/25 native,
+253/41/18 linear and255/39/20 area. These are per-image inference diagnostics, not the
+batch8 baseline validation protocol or event metrics. Therefore larger decoded input
+was not automatically better, and area interpolation had no demonstrated missing-helmet
+advantage. The existing width1280/linear defaults were retained; native-size remains an
+explicit diagnostic option. Original images/labels were not edited.
 
 ## Actual private video plumbing and performance
 
@@ -63,20 +76,38 @@ $env:SITEGUARD_GPU_MAPPING='data/local/ppe-mapping.json'
 python -m pytest tests/test_optional_ml.py -m gpu -q --basetemp runs/p1-gpu-new
 ```
 
-The genuine GPU smoke passed with exit0 (1passed,2deselected). The initial core suite had
-41passed/3skipped and exit0. Following added tests, three full repeat executions each
-reported61passed/3skipped but **all exited0xC0000008 during native shutdown**. Targeted
-reliability tests exited0. The Windows fault is **not fixed**. Tests were not weakened to
-hide it. Local Ruff/mypy installation again failed because package-index DNS/network access
-is unavailable; missing modules remain failed local checks. Linux CI results are recorded
-separately, not inferred from local assertions. More targeted tests were added after those
-three repeats; final CI/verification results will identify the exact final counts.
+The genuine GPU smoke passed with exit 0 (1 passed, 2 deselected). The latest full
+suite reports 70 passed / 3 skipped. With the old FD-level capture, three earlier
+full runs each passed 61 assertions / 3 skips but exited 0xC0000008 during shutdown.
+A controlled capture comparison isolated the trigger: the short video test pair
+failed with capture=fd but exited 0 with capture=sys and capture=no. Three full
+sys-capture executions then each passed 70 tests / 3 skips and exited 0.
+`pyproject.toml` now selects --capture=sys. Assertions are unchanged and native
+stderr remains visible (including the expected corrupted-media fixture error).
+This stabilizes the tested pytest launch path; it does not establish the exact
+internal native-library defect or excuse any other nonzero process exit.
+
+Local Ruff/mypy installation still fails because package-index access is unavailable;
+missing modules remain explicit failed local checks. The first P1 Linux CI passed
+Ruff, mypy (8 files), 61 tests / 5 optional-dependency skips, and the separate real
+CPU/ML job (4 passed / 1 deselected). Newer checks expand mypy to the pipeline and
+diagnostics; the final CI run will record their exact results.
+
+The saved 640px best checkpoint was re-evaluated using the same FP32, batch 8,
+imgsz 640 protocol: every reported metric exactly matches the original controlled
+validation (mAP50-95 0.6008811773600022). New evaluation artifacts additionally bind
+actual image/label bytes and class names with a portable content fingerprint.
+Source YAML equality alone cannot detect annotation edits. The 640/960 comparison
+now requires both evaluations' content hashes to match the current dataset.
 
 ## 960px controlled experiment
 
 A real3-batch forward/backward probe on CUDA:1 measured9,560,156,160 allocated and
 11,377,049,600 reserved bytes. Batch8 was retained, so no batch-size confounder was added.
-The new unique run `construction-ppe-12class-960-20261116` preserves native12classes,
+The first CUDA:1 probe saved real measurements but its shell process exited1; the raw native
+exit status was not captured. A separately recorded CUDA:0 three-batch repeat exited0.
+Ongoing CUDA:1 training confirms batch8 fits. These facts do not establish a Windows
+shutdown fix. The new unique run `construction-ppe-12class-960-20261116` preserves native12classes,
 original initialization,800/200split,seed42,FP32/AMPfalse,augmentations,80epochs/patience15.
 Physical GPU1 and imgsz960 are explicit differences. The 640px run is untouched.
 Training is running; no final960quality metrics are claimed yet. CuBLAS deterministic

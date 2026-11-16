@@ -7,6 +7,7 @@ from PIL import Image
 import yaml
 
 from siteguard.training.datasets import write_json
+from siteguard.evaluation.objects import validation_content_fingerprint
 
 
 def head_size_recall(analysis: Path, data_path: Path) -> dict:
@@ -43,7 +44,13 @@ def main() -> None:
     parser.add_argument("--allow-resolution-change", action="store_true")
     args = parser.parse_args()
     a, b = [json.loads((p/"metrics.json").read_text()) for p in (args.smoke, args.baseline)]
+    content_a, content_b = a.get("validation_content_sha256"), b.get("validation_content_sha256")
+    if content_a or content_b or args.allow_resolution_change:
+        if not content_a or content_a != content_b or content_a != validation_content_fingerprint(args.data):
+            raise ValueError("Evaluation content hashes differ/missing; re-evaluate both checkpoints")
     for key in ("protocol", "data_yaml_sha256", "ultralytics_version", "confusion_classes"):
+        if key == "data_yaml_sha256" and content_a and content_b:
+            continue  # Absolute root changes are safe only with equal content/class hashes.
         left, right = a[key], b[key]
         if key == "protocol" and args.allow_resolution_change:
             left = {k: v for k, v in left.items() if k != "imgsz"}
@@ -55,6 +62,8 @@ def main() -> None:
     comparison = {"scope": "same official development validation; not independent test",
         "reference_protocol": a["protocol"], "candidate_protocol": b["protocol"],
         "size_bin_basis": "same source boxes projected to long-side640 for both models",
+        "validation_content_sha256": content_a,
+        "content_integrity": "verified" if content_a else "not recorded in legacy evaluations",
         "protocol": b["protocol"], "smoke_checkpoint_sha256": a["checkpoint_sha256"],
         "baseline_checkpoint_sha256": b["checkpoint_sha256"],
         "results": {k: {"smoke": a["results"][k], "baseline": b["results"][k],

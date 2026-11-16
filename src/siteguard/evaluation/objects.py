@@ -4,13 +4,30 @@ mAP remains the official Ultralytics validation metric, not this diagnostic.
 """
 from pathlib import Path
 from typing import Any
+import hashlib
+import json
 
 import numpy as np
 import yaml
 from PIL import Image, ImageDraw
 from scipy.optimize import linear_sum_assignment
 
-from siteguard.training.datasets import class_names, write_json
+from siteguard.training.datasets import class_names, write_json, sha256
+
+
+def validation_content_fingerprint(data_path: Path, split: str = "val") -> str:
+    """Portable binding to actual image/label bytes and semantic class names."""
+    data = yaml.safe_load(data_path.read_text())
+    root = Path(data["path"])
+    records = []
+    for path in sorted((root/data[split]).rglob("*")):
+        if path.is_file() and path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}:
+            label = root/"labels"/split/f"{path.stem}.txt"
+            records.append((path.relative_to(root).as_posix(), sha256(path), sha256(label)))
+    if not records:
+        raise ValueError("No validation images to fingerprint")
+    payload = {"schema_version": 1, "split": split, "classes": class_names(data), "records": records}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
 def iou(a: list[float], b: list[float]) -> float:

@@ -22,7 +22,9 @@ def main() -> None:
     failed = False
     for command in commands:
         print("Running", " ".join(command), flush=True)
-        failed |= subprocess.run(command, cwd=root, env=environment).returncode != 0
+        result = subprocess.run(command, cwd=root, env=environment)
+        print(f"Exit code: {result.returncode}", flush=True)
+        failed |= result.returncode != 0
     raise SystemExit(1 if failed else 0)
 
 

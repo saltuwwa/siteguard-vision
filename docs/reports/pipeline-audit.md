@@ -44,6 +44,11 @@ This audit does not establish production readiness or independent accuracy.
   still open. It now retains CONFIRMED until closure; current visible head state
   is displayed separately as UNKNOWN. End time remains the last supporting bare
   head, rather than the time at which absence was finally noticed.
+- **A bare head during cooldown could retain a COMPLIANT/CLEARED display.**
+  It now becomes SUSPECT with an explicit `cooldown_active` decision while the
+  existing suppression deadline still prevents confirmation. A missing worker
+  also resets an in-progress visible-helmet clearance interval, so absence
+  cannot complete a clearance. Dedicated regressions cover both cases.
 - **Automatic CUDA selection required every GPU to be healthy.** A valid GPU was
   ignored if another failed the global doctor result. Auto selection now chooses
   a compatible reported device. Explicit incompatible device/CPU-FP16 requests
@@ -86,10 +91,22 @@ under-8px model-input size bin. Detector threshold .15 and rule/person threshold
 .6 serve different purposes; ByteTrack has its own .4/.5 initiation thresholds.
 Low-score candidates can therefore reach tracking but remain UNKNOWN for alerts.
 
+The installed predictor explicitly selects its detection head with
+`end2end=self.args.nms is False`. The actual saved 640px model ran with
+`nms=None`, `end2end_backend=False`, and FP32 (`quantize=32`) on both CUDA and CPU.
+Thus this verified path uses the one-to-many/NMS branch, despite the YOLO26 family
+supporting an NMS-free head. No extra project NMS is applied and no branch switch
+was silently introduced. Resolution comparison must preserve this behavior.
+Current Ultralytics deprecates `half` in favor of `quantize`; the adapter uses
+the supported field when available, avoiding per-frame warning spam, and checks
+actual backend precision. Three genuine validation-image prediction counts
+matched the earlier adapter record; an actual CPU image also executed successfully.
+
 VideoReader defaults to width 1280 for compatibility; `max_width: null` now
 preserves native source detail for controlled tests. Shrinking a wide image to
 1280 before YOLO resizes it again can discard high-frequency detail. Downscaling
-uses area interpolation. ROI/tiling would add duplicate reconciliation, camera
+retains the existing linear interpolation: the paired genuine-inference ablation
+found no no_helmet benefit from changing it to area interpolation. ROI/tiling would add duplicate reconciliation, camera
 calibration and latency; it is not justified before measuring the simpler 960px
 experiment. Higher resolution cannot recover detail absent in the original video.
 
@@ -124,10 +141,13 @@ to 640px. The original best/last checkpoints must remain byte-identical.
   decoder/model plumbing but cannot validate construction-worker tracking or alerts.
   Suitable construction footage plus reviewed temporal labels remain external
   dependencies. Do not turn the office recording into production accuracy claims.
-- Windows pytest previously exhibited intermittent native shutdown 0xC0000008.
-  Thread-limit and cached OpenCV experiments did not establish a stable fix.
-  Current repeat-execution results, failed checks and exact commands belong in
-  `docs/verification.md`; passing assertions alone are not a passing process.
+- Windows pytest's native shutdown 0xC0000008 was reproduced with FD-level capture.
+  Short video tests exited 0 with sys/no capture; three full sys-capture runs
+  each passed 70 tests/3 skips and exited 0. The pytest configuration now uses
+  sys capture, retaining assertions and visible native stderr. This is a verified
+  test-launch mitigation, not a claim to have repaired the native library's exact
+  internal cause. Failed FD-capture runs and the unrelated initial probe nonzero
+  exit remain recorded; no dependency upgrade was retained.
 - Startup failures before the worker loop and hard process termination can leave
   incomplete run files. Database evidence/JSONL are not one atomic transaction;
   a filesystem/SQL failure remains explicit, and the database is authoritative.

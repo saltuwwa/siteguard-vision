@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 from PIL import Image
 
-from siteguard.evaluation.objects import frame_diagnostics
+from siteguard.evaluation.objects import frame_diagnostics, validation_content_fingerprint
 
 
 def test_native_classes_wrong_assignment_missed_head_and_duplicate(tmp_path: Path) -> None:
@@ -35,3 +35,6 @@ def test_native_classes_wrong_assignment_missed_head_and_duplicate(tmp_path: Pat
     assert sum(map(sum, matrix)) == 4
     assert {e["kind"] for e in report["examples"][0]["errors"]} == {"wrong_class", "FP", "FN"}
     assert Path(report["examples"][0]["visualization"]).is_file()
+    before = validation_content_fingerprint(data)
+    (labels/"fixture.txt").write_text("6 .2 .2 .1 .1\n")
+    assert before != validation_content_fingerprint(data)

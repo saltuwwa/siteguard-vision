@@ -151,6 +151,10 @@ class ViolationEngine:
         for track_id, record in list(self.tracks.items()):
             if track_id in visible_ids:
                 continue
+            # A missing worker cannot provide continuous visible-helmet support.
+            # Retain the open incident/short-gap bare-head history, but restart
+            # the stricter clearance interval when the worker is visible again.
+            record.compliant_since = None
             if record.last_timestamp is not None and timestamp-record.last_timestamp > self.config.max_gap:
                 record.observations.clear()
                 record.compliant_since = None

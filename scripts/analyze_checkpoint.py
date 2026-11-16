@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import yaml
 from PIL import Image, ImageDraw, ImageFont
-from siteguard.evaluation.objects import frame_diagnostics
+from siteguard.evaluation.objects import frame_diagnostics, validation_content_fingerprint
 from siteguard.training.datasets import class_names, sha256, write_json
 from siteguard.inference.runtime import require_ultralytics
 
@@ -59,6 +59,7 @@ def main() -> None:
     import matplotlib.pyplot as plt
     protocol = {'imgsz': args.imgsz, 'batch': args.batch, 'device': int(args.device) if args.device.isdigit() else args.device, 'workers': 0, 'conf': 0.001, 'iou': 0.7, 'max_det': 300, 'half': False, 'seed': 42, 'deterministic': True, 'split': 'val'}
     model = YOLO(str(args.model))
+    content_sha256 = validation_content_fingerprint(args.data)
     metrics = model.val(data=str(args.data.resolve()), **protocol, plots=True, save_txt=True, save_conf=True, project=str(args.output.parent.resolve()), name=args.output.name, exist_ok=False)
     output = Path(metrics.save_dir)
     classes = model.names
@@ -132,6 +133,9 @@ def main() -> None:
                 panel.save(path)
             report['head_error_crops'].append({'file': str(path), 'image': record['image'], **error})
             counters[kind] += 1
+    if validation_content_fingerprint(args.data) != content_sha256:
+        raise ValueError('Validation bytes changed during evaluation')
+    report['validation_content_sha256'] = content_sha256
     write_json(output / 'metrics.json', report)
     write_json(output / 'dataset-statistics.json', dataset_statistics(args.data, args.imgsz))
     print(json.dumps({'output': str(output), 'focus': report['focus_fixed_counts'], 'helmet_to_no_helmet': report.get('helmet_to_no_helmet'), 'no_helmet_to_helmet': report.get('no_helmet_to_helmet')}, indent=2))

@@ -69,6 +69,7 @@ class PipelineDiagnostics:
                      "rejected_head_associations", "unknown_worker_observations",
                      "suspected_violation_observations", "confirmed_events",
                      "cleared_events", "expired_events", "tracking_resets",
+                     "ended_events", "expired_tracks", "cooldown_suppressed_observations",
                      "insufficient_temporal_evidence"):
             self.counts[name] = 0
 
@@ -76,9 +77,12 @@ class PipelineDiagnostics:
         counts: Counter[str] = Counter()
         hist = {name: [0]*10 for name in self.confidence}
         for detection in detections:
-            if detection.label in self.confidence and math.isfinite(detection.confidence):
+            if detection.label in self.confidence:
                 name = detection.label
                 counts[f"{name}_detections"] += 1
+                if not math.isfinite(detection.confidence) or not 0 <= detection.confidence <= 1:
+                    counts["invalid_detection_confidence"] += 1
+                    continue
                 index = min(9, max(0, int(detection.confidence*10)))
                 hist[name][index] += 1
                 self.confidence[name][index] += 1
@@ -95,3 +99,21 @@ class PipelineDiagnostics:
                 "confidence_bin_edges": [i/10 for i in range(11)],
                 "detection_scope": "adapter outputs after detector threshold; not pre-threshold logits",
                 "observation_scope": "counts across processed frames, not unique people/incidents"}
+
+
+def gpu_memory_snapshot(device: str) -> dict[str, Any] | None:
+    index = device.removeprefix("cuda:")
+    if not index.isdigit():
+        return None
+    try:
+        import torch
+        if not torch.cuda.is_available():
+            return {"device": int(index), "error_type": "CUDAUnavailable"}
+        return {"device": int(index), "allocated_bytes": torch.cuda.memory_allocated(int(index)),
+                "reserved_bytes": torch.cuda.memory_reserved(int(index)),
+                "peak_allocated_bytes": torch.cuda.max_memory_allocated(int(index)),
+                "peak_reserved_bytes": torch.cuda.max_memory_reserved(int(index)),
+                "scope": "process allocator since last reset; includes model initialization"}
+    except Exception as exc:
+        # Optional telemetry must never erase the original inference failure report.
+        return {"device": int(index), "error_type": type(exc).__name__}
