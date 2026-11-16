@@ -26,6 +26,24 @@ def test_real_bytetrack_adapter_if_installed() -> None:
     assert len(tracker.update([Detection((20, 10, 120, 290), .95, "person")], image)) == 1
 
 
+def test_real_bytetrack_short_occlusion_and_expiry() -> None:
+    pytest.importorskip("ultralytics")
+    pytest.importorskip("lap")
+    tracker = ByteTracker(5, buffer_seconds=1.)
+    image = np.zeros((300, 200, 3), dtype=np.uint8)
+    detection = Detection((20, 10, 120, 290), .95, "person")
+    original = tracker.update([detection], image)[0].track_id
+    assert tracker.update([Detection((25, 12, 45, 35), .9, "helmet")], image) == []
+    assert tracker.update([], image) == []
+    assert tracker.update([detection], image)[0].track_id == original
+    for _ in range(8):
+        tracker.update([], image)
+    # New tracks can require a second observation after the first frame.
+    tracker.update([detection], image)
+    fresh = tracker.update([detection], image)
+    assert len(fresh) == 1 and fresh[0].track_id != original
+
+
 @pytest.mark.gpu
 @pytest.mark.skipif(not os.getenv("SITEGUARD_GPU_MODEL"), reason="Set SITEGUARD_GPU_MODEL to real PPE weights")
 def test_genuine_gpu_smoke() -> None:

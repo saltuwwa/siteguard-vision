@@ -1,4 +1,100 @@
-# Dataset validation and CUDA baseline verification - 2026-11-15
+# SiteGuard verification - P1, 2026-11-16
+
+The 640px baseline checkpoint and dataset remain unchanged. P1 adds rejection diagnostics,
+bounded stage timers, failure-path reports, explicit checkpoint/device/precision checks,
+conservative association corrections and distinct detection/track/event annotation styles.
+See [technical audit](reports/pipeline-audit.md) and [machine-readable runtime report](reports/p1-runtime-20261116.json).
+No frontend source or endpoint schema was changed.
+
+## P1 measured findings
+
+At fixed genuine 640px validation predictions and decoder width1280, association accepted
+322/479 heads (99 bare heads, 223 helmets). It rejected128 heads below confidence0.6 and
+13 below12 decoded pixels. Among131 annotation-relative no_helmet TP predictions at detector
+confidence0.15 / IoU0.5, 36 were not accepted:25 were below association confidence and6
+failed size after passing confidence. The same confidence gate also rejected41/48
+annotation-relative bare-head FP predictions. Blindly lowering confidence would trade
+misses against additional false head evidence. With native-size coordinates, 101 rather
+than95 annotation-relative TP bare heads reached some person; four FP bare heads reached
+some person in either scenario. Correct worker identity is not labeled by this analysis.
+The12px gate is in decoded pixels, not model-input pixels. No source annotations changed.
+
+## Actual private video plumbing and performance
+
+Existing local MP4 uploads were QA patterns or a stationary-photo fixture. Existing private
+RTSP/HLS fragments were visually inspected and remuxed, without generating new content,
+into a10-second empty-office recording. It is genuine camera video but **not construction
+worker footage**. No private frame, source path or video is committed. Three low-confidence
+person detections occurred; no active tracks, heads or events resulted. This does not
+establish worker tracking or safety-alert accuracy.
+
+The actual VideoReader -> trained YOLO26s -> real ByteTrack -> association -> rules ->
+EventSink path completed on CUDA:0:150 decoded frames at15FPS,80 sampled frames,zero
+queue drops,80 output frames at8FPS. All required logs, diagnostics, summary/metrics and
+an empty evidence directory were produced. FFmpeg fully decoded annotated.mp4 with exit0;
+ffprobe reported960x786,80frames,8FPS,10seconds. No evidence screenshot was fabricated
+when no event existed. Local output: `runs/p1-20261116/office-fp32/`.
+
+Measured full-pipeline throughput was22.956FPS including cold inference; decode-to-output
+p50/p95 were375/453.8ms, including offline queueing. Detector-only, after3warmups over80
+samples: FP32 p50/p95=12.585/23.398ms (68.02FPS); FP16=15.119/22.595ms (62.71FPS).
+FP16 execution/device/actual backend dtype were checked. It did not improve this short
+workload, so default FP32 is retained. These timings are not crowded-scene production
+benchmarks. All stage timings, GPU allocator measurements and sampling counters are in
+the JSON report. Event commit timings come from positive synthetic integration fixtures,
+not nonexistent real office violations. Concurrent stage totals must not be added.
+
+## Reproduction commands and checks
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+$env:YOLO_CONFIG_DIR=Join-Path (Get-Location) 'runs/ultralytics-config'
+$env:YOLO_AUTOINSTALL='false'
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'
+python scripts/check.py
+python scripts/audit_association.py --data data/local/construction-ppe.source.yaml --predictions runs/nohelmet-baseline/baseline-analysis/labels --output runs/p1-association-audit-new.json
+python scripts/probe_training_memory.py --config configs/train-960.local.yaml --output runs/p1-memory-probe-new.json
+# Actual controlled training command; use a new name before repeating:
+siteguard train --config configs/train-960.local.yaml
+# Private source/config remain local; choose new output:
+siteguard analyze --input runs/p1-20261116/private-video/office-recording.mp4 --config configs/runtime-p1.local.yaml --output runs/p1-office-new
+$env:SITEGUARD_GPU_MODEL=Join-Path (Get-Location) 'runs/train/construction-ppe-12class-baseline80-20261115/weights/best.pt'
+$env:SITEGUARD_GPU_MAPPING='data/local/ppe-mapping.json'
+python -m pytest tests/test_optional_ml.py -m gpu -q --basetemp runs/p1-gpu-new
+```
+
+The genuine GPU smoke passed with exit0 (1passed,2deselected). The initial core suite had
+41passed/3skipped and exit0. Following added tests, three full repeat executions each
+reported61passed/3skipped but **all exited0xC0000008 during native shutdown**. Targeted
+reliability tests exited0. The Windows fault is **not fixed**. Tests were not weakened to
+hide it. Local Ruff/mypy installation again failed because package-index DNS/network access
+is unavailable; missing modules remain failed local checks. Linux CI results are recorded
+separately, not inferred from local assertions. More targeted tests were added after those
+three repeats; final CI/verification results will identify the exact final counts.
+
+## 960px controlled experiment
+
+A real3-batch forward/backward probe on CUDA:1 measured9,560,156,160 allocated and
+11,377,049,600 reserved bytes. Batch8 was retained, so no batch-size confounder was added.
+The new unique run `construction-ppe-12class-960-20261116` preserves native12classes,
+original initialization,800/200split,seed42,FP32/AMPfalse,augmentations,80epochs/patience15.
+Physical GPU1 and imgsz960 are explicit differences. The 640px run is untouched.
+Training is running; no final960quality metrics are claimed yet. CuBLAS deterministic
+warnings remain in the real logs, so deterministic=true is not claimed as bitwise
+reproducibility. Final comparison will keep size bins anchored to the same source boxes
+at long-side640, not silently re-bin small heads at960.
+
+## Remaining acceptance dependency
+
+A licensed actual construction-worker MP4 and independently reviewed temporal intervals
+are still required to evaluate crowded worker identities, occlusion, true bare-head
+incidents, duplicates, delay, event precision/recall and false alerts per camera-hour.
+Empty-office video and synthetic fixtures do not resolve that dependency. The application
+is not declared production-ready.
+
+
+## Earlier 640px baseline record
+
 
 The unchanged 12-class dataset passed integrity checks. After the one-epoch smoke, the user-requested **80-epoch YOLO26s baseline completed on CUDA:0**. Repeated validation increased `no_helmet` recall from **0.22346 to 0.65922** and overall mAP50–95 from **0.37445 to 0.60088**. These are development validation results, not independent test or production event performance. The checkpoint executes in the SiteGuard adapter. Genuine MP4 evaluation remains blocked by absent construction video assets.
 

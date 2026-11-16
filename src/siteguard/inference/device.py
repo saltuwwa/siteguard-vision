@@ -90,7 +90,10 @@ def select_device(requested: str, half: bool = False) -> tuple[str, bool]:
         return "cpu", False
     report = doctor()
     if requested == "auto":
-        return ("0", half and report["gpus"][0]["fp16_ok"]) if report["cuda_ok"] else ("cpu", False)
+        for index, gpu in enumerate(report["gpus"]):
+            if gpu["compatible"]:
+                return str(gpu.get("index", index)), half and gpu["fp16_ok"]
+        return "cpu", False
     index = int(requested.removeprefix("cuda:"))
     gpus = report["gpus"]
     if index < 0 or index >= len(gpus) or not gpus[index]["compatible"]:

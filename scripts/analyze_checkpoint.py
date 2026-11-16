@@ -44,6 +44,9 @@ def main() -> None:
     parser.add_argument('--model', type=Path, required=True)
     parser.add_argument('--data', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--imgsz', type=int, default=640)
+    parser.add_argument('--device', default='0')
+    parser.add_argument('--batch', type=int, default=8)
     args = parser.parse_args()
     if args.output.exists():
         raise ValueError('Analysis output must be a new directory')
@@ -54,7 +57,7 @@ def main() -> None:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    protocol = {'imgsz': 640, 'batch': 8, 'device': 0, 'workers': 0, 'conf': 0.001, 'iou': 0.7, 'max_det': 300, 'half': False, 'seed': 42, 'deterministic': True, 'split': 'val'}
+    protocol = {'imgsz': args.imgsz, 'batch': args.batch, 'device': int(args.device) if args.device.isdigit() else args.device, 'workers': 0, 'conf': 0.001, 'iou': 0.7, 'max_det': 300, 'half': False, 'seed': 42, 'deterministic': True, 'split': 'val'}
     model = YOLO(str(args.model))
     metrics = model.val(data=str(args.data.resolve()), **protocol, plots=True, save_txt=True, save_conf=True, project=str(args.output.parent.resolve()), name=args.output.name, exist_ok=False)
     output = Path(metrics.save_dir)
@@ -130,7 +133,7 @@ def main() -> None:
             report['head_error_crops'].append({'file': str(path), 'image': record['image'], **error})
             counters[kind] += 1
     write_json(output / 'metrics.json', report)
-    write_json(output / 'dataset-statistics.json', dataset_statistics(args.data, 640))
+    write_json(output / 'dataset-statistics.json', dataset_statistics(args.data, args.imgsz))
     print(json.dumps({'output': str(output), 'focus': report['focus_fixed_counts'], 'helmet_to_no_helmet': report.get('helmet_to_no_helmet'), 'no_helmet_to_helmet': report.get('no_helmet_to_helmet')}, indent=2))
 if __name__ == '__main__':
     main()

@@ -1,0 +1,445 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-16",
+  "scope": "Runtime measurements on private 10s empty-office RTSP capture; no independent construction-video or event accuracy ground truth.",
+  "construction_video_validation": "blocked: authorized worker footage and reviewed intervals absent",
+  "association_fixed_prediction_audit": {
+    "scope": "fixed saved genuine detector predictions; per-image person candidates, NOT tracking/association accuracy",
+    "detector_threshold": 0.15,
+    "head_and_person_confidence": 0.6,
+    "minimum_head_size_basis": "12 pixels in decoded image, NOT model input pixels",
+    "counterfactual_limit": "coordinate rescaling only; does not rerun detector after video resize",
+    "runs": [
+      {
+        "max_width": 1280,
+        "detections": {
+          "person": 525,
+          "barehead": 179,
+          "helmet": 300
+        },
+        "head_attempts": 479,
+        "accepted": 322,
+        "accepted_by_class": {
+          "barehead": 99,
+          "helmet": 223
+        },
+        "rejected_by_class": {
+          "helmet": {
+            "low_detection_confidence": 62,
+            "person_confidence_too_low": 1,
+            "head_too_small": 7,
+            "no_matching_person": 2,
+            "ambiguous_person_association": 3,
+            "head_clipped": 2
+          },
+          "barehead": {
+            "low_detection_confidence": 66,
+            "head_too_small": 6,
+            "ambiguous_person_association": 1,
+            "person_confidence_too_low": 2,
+            "no_matching_person": 1,
+            "multiple_distinct_heads": 4
+          }
+        },
+        "barehead_annotation_relative_iou50": {
+          "annotation_tp": 131,
+          "annotation_tp_accepted_to_some_person": 95,
+          "annotation_fp": 48,
+          "annotation_fp_not_accepted": 44,
+          "annotation_fp_below_association_confidence": 41,
+          "annotation_tp_not_accepted": 36,
+          "annotation_tp_below_association_confidence": 25,
+          "annotation_tp_below_size_after_confidence": 6,
+          "annotation_fp_accepted_to_some_person": 4
+        },
+        "rejected_by_reason": {
+          "low_detection_confidence": 128,
+          "head_too_small": 13,
+          "person_confidence_too_low": 3,
+          "no_matching_person": 3,
+          "ambiguous_person_association": 4,
+          "head_clipped": 2,
+          "multiple_distinct_heads": 4
+        },
+        "unknown_workers": {
+          "no_visible_head": 197,
+          "ambiguous_person_association": 4,
+          "multiple_distinct_heads": 2
+        }
+      },
+      {
+        "max_width": null,
+        "detections": {
+          "person": 525,
+          "barehead": 179,
+          "helmet": 300
+        },
+        "head_attempts": 479,
+        "accepted": 336,
+        "accepted_by_class": {
+          "barehead": 105,
+          "helmet": 231
+        },
+        "rejected_by_class": {
+          "helmet": {
+            "low_detection_confidence": 62,
+            "person_confidence_too_low": 1,
+            "no_matching_person": 2,
+            "ambiguous_person_association": 3,
+            "head_clipped": 1
+          },
+          "barehead": {
+            "low_detection_confidence": 66,
+            "ambiguous_person_association": 1,
+            "person_confidence_too_low": 2,
+            "no_matching_person": 1,
+            "multiple_distinct_heads": 4
+          }
+        },
+        "barehead_annotation_relative_iou50": {
+          "annotation_tp": 131,
+          "annotation_tp_accepted_to_some_person": 101,
+          "annotation_fp": 48,
+          "annotation_fp_not_accepted": 44,
+          "annotation_fp_below_association_confidence": 41,
+          "annotation_tp_not_accepted": 30,
+          "annotation_tp_below_association_confidence": 25,
+          "annotation_fp_accepted_to_some_person": 4
+        },
+        "rejected_by_reason": {
+          "low_detection_confidence": 128,
+          "person_confidence_too_low": 3,
+          "no_matching_person": 3,
+          "ambiguous_person_association": 4,
+          "head_clipped": 1,
+          "multiple_distinct_heads": 4
+        },
+        "unknown_workers": {
+          "no_visible_head": 183,
+          "ambiguous_person_association": 4,
+          "multiple_distinct_heads": 2
+        }
+      }
+    ]
+  },
+  "runtime": {
+    "input_frames": 150,
+    "source_fps": 15,
+    "sampled_frames": 80,
+    "output_fps": 8,
+    "output_seconds": 10,
+    "output_dimensions": [
+      960,
+      786
+    ],
+    "full_decode_check_exit": 0,
+    "pipeline": {
+      "processed_fps": 22.955523672879952,
+      "elapsed_seconds": 3.485000000000582,
+      "latency_seconds": {
+        "basis": "decode-to-output; excludes camera/network and async event commit",
+        "sample_count": 80,
+        "p50": 0.375,
+        "p95": 0.45379999999786375,
+        "retained_samples": 80
+      },
+      "ingestion": {
+        "decoded": 150,
+        "sampled": 80,
+        "sampling_skipped": 70,
+        "dropped": 0,
+        "reconnects": 0,
+        "source_fps": 15.0,
+        "timestamp_fallbacks": 0,
+        "errors": []
+      },
+      "confirmed_events": 0,
+      "performance": {
+        "main_thread": {
+          "frame_wait": {
+            "count": 81,
+            "total_seconds": 0.04633900001135771,
+            "max_seconds": 0.04303810000055819,
+            "retained_samples": 81,
+            "p50_seconds": 2.979999771923758e-05,
+            "p95_seconds": 6.650000068475492e-05,
+            "percentile_scope": "last 2048 observations"
+          },
+          "scene_change": {
+            "count": 80,
+            "total_seconds": 0.14889650001350674,
+            "max_seconds": 0.00542680000216933,
+            "retained_samples": 80,
+            "p50_seconds": 0.0017537499970785575,
+            "p95_seconds": 0.0027085500028988445,
+            "percentile_scope": "last 2048 observations"
+          },
+          "detector_inference": {
+            "count": 80,
+            "total_seconds": 2.256873500016809,
+            "max_seconds": 0.3141028999998525,
+            "retained_samples": 80,
+            "p50_seconds": 0.02376054999876942,
+            "p95_seconds": 0.03451310000073135,
+            "percentile_scope": "last 2048 observations"
+          },
+          "bytetrack": {
+            "count": 80,
+            "total_seconds": 0.020894900007988326,
+            "max_seconds": 0.00101859999995213,
+            "retained_samples": 80,
+            "p50_seconds": 0.00024369999846385326,
+            "p95_seconds": 0.00033109999912994665,
+            "percentile_scope": "last 2048 observations"
+          },
+          "head_association": {
+            "count": 80,
+            "total_seconds": 0.0009194999984174501,
+            "max_seconds": 4.950000220560469e-05,
+            "retained_samples": 80,
+            "p50_seconds": 1.06999996205559e-05,
+            "p95_seconds": 1.67049998708535e-05,
+            "percentile_scope": "last 2048 observations"
+          },
+          "temporal_rules": {
+            "count": 80,
+            "total_seconds": 0.0004910999959975015,
+            "max_seconds": 8.39999847812578e-06,
+            "retained_samples": 80,
+            "p50_seconds": 6.249998477869667e-06,
+            "p95_seconds": 7.105002987373154e-06,
+            "percentile_scope": "last 2048 observations"
+          },
+          "annotation_and_encode": {
+            "count": 80,
+            "total_seconds": 0.5906012000159535,
+            "max_seconds": 0.013092999997752486,
+            "retained_samples": 80,
+            "p50_seconds": 0.007075200001054327,
+            "p95_seconds": 0.01030867000172293,
+            "percentile_scope": "last 2048 observations"
+          },
+          "frame_jsonl": {
+            "count": 80,
+            "total_seconds": 0.009337200004665647,
+            "max_seconds": 0.00035030000071856193,
+            "retained_samples": 80,
+            "p50_seconds": 9.920000229612924e-05,
+            "p95_seconds": 0.0002237399990917764,
+            "percentile_scope": "last 2048 observations"
+          },
+          "shutdown": {
+            "count": 3,
+            "total_seconds": 0.002544900002249051,
+            "max_seconds": 0.0023634999997739214,
+            "retained_samples": 3,
+            "p50_seconds": 0.0001717000013741199,
+            "p95_seconds": 0.002144319999933941,
+            "percentile_scope": "last 2048 observations"
+          },
+          "camera_heartbeat": {
+            "count": 1,
+            "total_seconds": 0.013588500001787907,
+            "max_seconds": 0.013588500001787907,
+            "retained_samples": 1,
+            "p50_seconds": 0.013588500001787907,
+            "p95_seconds": 0.013588500001787907,
+            "percentile_scope": "last 2048 observations"
+          }
+        },
+        "decoder_thread": {
+          "decode_read": {
+            "count": 151,
+            "total_seconds": 0.41194330000143964,
+            "max_seconds": 0.021989200002280995,
+            "retained_samples": 151,
+            "p50_seconds": 0.002388299999438459,
+            "p95_seconds": 0.004364000000350643,
+            "percentile_scope": "last 2048 observations"
+          }
+        },
+        "video_output": {
+          "annotation_render": {
+            "count": 80,
+            "total_seconds": 0.1844188000068243,
+            "max_seconds": 0.005062500000349246,
+            "retained_samples": 80,
+            "p50_seconds": 0.002205400000093505,
+            "p95_seconds": 0.0030911800016838234,
+            "percentile_scope": "last 2048 observations"
+          },
+          "video_encode": {
+            "count": 80,
+            "total_seconds": 0.3786393000082171,
+            "max_seconds": 0.00984719999905792,
+            "retained_samples": 80,
+            "p50_seconds": 0.004359100001238403,
+            "p95_seconds": 0.007055450001462303,
+            "percentile_scope": "last 2048 observations"
+          }
+        },
+        "event_io_thread": {},
+        "gpu_memory": {
+          "device": 0,
+          "allocated_bytes": 71535104,
+          "reserved_bytes": 159383552,
+          "peak_allocated_bytes": 123568128,
+          "peak_reserved_bytes": 159383552,
+          "scope": "process allocator since last reset; includes model initialization"
+        },
+        "sampling_target_fps": 8.0,
+        "meets_sampling_target": true,
+        "scope": "includes cold inference; concurrent thread totals overlap"
+      },
+      "status": "completed"
+    },
+    "diagnostics": {
+      "schema_version": 1,
+      "processed_frames": 80,
+      "person_detections": 3,
+      "helmet_detections": 0,
+      "barehead_detections": 0,
+      "active_person_track_observations": 0,
+      "head_association_attempts": 0,
+      "accepted_head_associations": 0,
+      "rejected_head_associations": 0,
+      "unknown_worker_observations": 0,
+      "suspected_violation_observations": 0,
+      "confirmed_events": 0,
+      "cleared_events": 0,
+      "expired_events": 0,
+      "tracking_resets": 1,
+      "insufficient_temporal_evidence": 0,
+      "rejected_associations_by_reason": {},
+      "unknown_workers_by_reason": {},
+      "tracking_resets_by_reason": {
+        "source_started": 1
+      },
+      "confidence_histograms": {
+        "person": [
+          0,
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "helmet": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "barehead": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "confidence_bin_edges": [
+        0.0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        1.0
+      ],
+      "detection_scope": "adapter outputs after detector threshold; not pre-threshold logits",
+      "observation_scope": "counts across processed frames, not unique people/incidents",
+      "temporal_reasons": {
+        "retired_tracks": 0
+      }
+    },
+    "detector_only_runs": [
+      {
+        "precision": "fp32",
+        "device": "0",
+        "model_version": "ultralytics-8.4.213:sha256:2ccf91ed1827aeb0fb5b35f4fec42d3127feddbe7b9d1f050be3a02426fc45c0",
+        "frames": 80,
+        "inference_fps": 68.02047824549868,
+        "inference_ms_p50": 12.58504999896104,
+        "inference_ms_p95": 23.398280001856612,
+        "warmup_iterations": 3
+      },
+      {
+        "precision": "fp16",
+        "device": "0",
+        "model_version": "ultralytics-8.4.213:sha256:2ccf91ed1827aeb0fb5b35f4fec42d3127feddbe7b9d1f050be3a02426fc45c0",
+        "frames": 80,
+        "inference_fps": 62.7103835383309,
+        "inference_ms_p50": 15.118999999685911,
+        "inference_ms_p95": 22.595330000149257,
+        "warmup_iterations": 3
+      }
+    ]
+  },
+  "gpu_smoke": {
+    "status": "passed",
+    "exit_code": 0,
+    "tests_passed": 1,
+    "deselected": 2
+  },
+  "windows_pytest_repeats": [
+    {
+      "returncode": 0,
+      "assertions": "61 passed, 3 skipped in 16.57s"
+    },
+    {
+      "returncode": 3221225480,
+      "assertions": "61 passed, 3 skipped in 16.66s"
+    },
+    {
+      "returncode": 3221225480,
+      "assertions": "61 passed, 3 skipped in 14.26s"
+    }
+  ],
+  "960_memory_probe": {
+    "scope": "three genuine training batches; no optimizer steps",
+    "device": "1",
+    "batch": 8,
+    "imgsz": 960,
+    "amp": false,
+    "batches": 3,
+    "seconds": 4.478974200002995,
+    "peak_allocated_bytes": 9560156160,
+    "peak_reserved_bytes": 11377049600,
+    "free_total_bytes": [
+      20951597056,
+      34162016256
+    ],
+    "note": "Full training adds optimizer state; retain headroom. Baseline weights unchanged."
+  },
+  "960_training": {
+    "status": "running",
+    "run": "construction-ppe-12class-960-20261116",
+    "config": "configs/train-960.yaml"
+  },
+  "notes": [
+    "FP16 was slower than FP32 on this short scene; default stays FP32.",
+    "Before/after synthetic runs used different GPUs and background loads and do not prove an optimization speedup.",
+    "Association accepted-to-some-person counts do not establish correct worker identity.",
+    "Private frames, source paths and video files are not included in Git."
+  ]
+}

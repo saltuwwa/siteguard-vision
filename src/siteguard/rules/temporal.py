@@ -4,6 +4,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from enum import StrEnum
 from uuid import NAMESPACE_URL, uuid5
+import math
 
 from siteguard.config.settings import RulesConfig
 from siteguard.events.schema import SupportingObservation, ViolationEvent
@@ -27,6 +28,7 @@ class TrackState:
     compliant_since: float | None = None
     cooldown_until: float = -1
     event: ViolationEvent | None = None
+    decision_reason: str = "insufficient_visual_evidence"
 
 
 class ViolationEngine:
@@ -37,6 +39,7 @@ class ViolationEngine:
         self.model_version = model_version
         self.config = config
         self.tracks: dict[int, TrackState] = {}
+        self.last_frame_timestamp: float | None = None
 
     def _close(self, record: TrackState, reason: str, cleared: bool = False) -> ViolationEvent | None:
         event = record.event
@@ -49,9 +52,15 @@ class ViolationEngine:
         record.observations.clear()
         record.cooldown_until = (record.last_timestamp or 0) + self.config.cooldown_seconds
         record.state = State.CLEARED if cleared else State.UNKNOWN
+        record.decision_reason = reason
         return event.model_copy(deep=True)
 
     def observe(self, timestamp: float, evidence: HeadEvidence) -> list[ViolationEvent]:
+        if not math.isfinite(timestamp) or timestamp < 0:
+            raise ValueError("Source timestamp must be finite and nonnegative")
+        if self.last_frame_timestamp is not None and timestamp < self.last_frame_timestamp:
+            raise ValueError("Source timestamps regressed across tracks")
+        self.last_frame_timestamp = timestamp
         record = self.tracks.setdefault(evidence.track_id, TrackState())
         if record.last_timestamp is not None and timestamp <= record.last_timestamp:
             raise ValueError("Per-track observations must have strictly increasing source timestamps")
@@ -89,9 +98,11 @@ class ViolationEngine:
                     event.supportingobservations.pop(64)
                 event.supportingobservations.append(observation)
                 record.state = State.CONFIRMED
+                record.decision_reason = "continuous_confirmed_incident"
                 updates.append(event.model_copy(deep=True))
             elif timestamp >= record.cooldown_until:
                 record.state = State.SUSPECT
+                record.decision_reason = "insufficient_temporal_evidence"
                 first = record.observations[0].timestamp
                 if (len(record.observations) >= self.config.min_observations
                         and timestamp-first >= self.config.min_duration):
@@ -106,32 +117,45 @@ class ViolationEngine:
                         supportingobservations=list(record.observations), observationcount=len(confidences))
                     record.event = event
                     record.state = State.CONFIRMED
+                    record.decision_reason = "confirmed_temporal_evidence"
                     updates.append(event.model_copy(deep=True))
+            else:
+                record.state = State.SUSPECT
+                record.decision_reason = "cooldown_active"
         elif visible_helmet:
             record.observations.clear()
             if record.compliant_since is None:
                 record.compliant_since = timestamp
             if record.event:
+                record.decision_reason = "awaiting_sustained_helmet"
                 if timestamp-record.compliant_since >= self.config.clear_seconds:
                     closed = self._close(record, "visible_helmet", cleared=True)
                     if closed:
                         updates.append(closed)
             else:
                 record.state = State.COMPLIANT
+                record.decision_reason = "visible_helmet"
         else:
             record.compliant_since = None
+            record.decision_reason = "insufficient_visual_evidence"
             if not record.event:
                 record.state = State.UNKNOWN
         return updates
 
     def tick(self, timestamp: float, visible_ids: set[int]) -> list[ViolationEvent]:
+        if not math.isfinite(timestamp) or timestamp < 0 or (
+                self.last_frame_timestamp is not None and timestamp < self.last_frame_timestamp):
+            raise ValueError("Frame timestamps must be nonnegative, finite and monotonic")
+        self.last_frame_timestamp = timestamp
         updates = []
         for track_id, record in list(self.tracks.items()):
             if track_id in visible_ids:
                 continue
             if record.last_timestamp is not None and timestamp-record.last_timestamp > self.config.max_gap:
                 record.observations.clear()
-                record.state = State.UNKNOWN
+                record.compliant_since = None
+                record.state = State.CONFIRMED if record.event else State.UNKNOWN
+                record.decision_reason = "track_unobserved"
             if record.last_timestamp is not None and timestamp-record.last_timestamp > self.config.window_seconds:
                 closed = self._close(record, "track_lost")
                 if closed:

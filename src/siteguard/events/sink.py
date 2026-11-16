@@ -7,6 +7,7 @@ from siteguard.events.schema import ViolationEvent
 from siteguard.inference.base import ImageArray
 from siteguard.storage.database import EventStore
 from siteguard.storage.evidence import save_evidence
+from siteguard.diagnostics import StageTimings
 
 
 class EventSink:
@@ -15,10 +16,12 @@ class EventSink:
                  publish: bool = False) -> None:
         self.store = store
         self.root = evidence_root
+        self.root.mkdir(parents=True, exist_ok=True)
         self.log = log
         self.publish = publish
         self.queue: queue.Queue[tuple[ViolationEvent, ImageArray | None] | None] = queue.Queue(32)
         self.error: Exception | None = None
+        self.performance = StageTimings()
         self.paths: dict[str, str] = {}
         self.thread = threading.Thread(target=self._run, name="event-io", daemon=True)
         self.thread.start()
@@ -34,12 +37,15 @@ class EventSink:
                 if path is None:
                     if image is None:
                         raise RuntimeError("First confirmation requires image evidence")
-                    path = save_evidence(self.root, event, image)
+                    with self.performance.measure("evidence_capture"):
+                        path = save_evidence(self.root, event, image)
                     self.paths[event.eventid] = path
                 event.evidenceimagepath = path
-                self.store.save(event, self.publish)
-                self.log.write(event.model_dump_json()+"\n")
-                self.log.flush()
+                with self.performance.measure("event_database_commit"):
+                    self.store.save(event, self.publish)
+                with self.performance.measure("event_jsonl_flush"):
+                    self.log.write(event.model_dump_json()+"\n")
+                    self.log.flush()
                 if event.status != "confirmed":
                     self.paths.pop(event.eventid, None)
         except Exception as exc:

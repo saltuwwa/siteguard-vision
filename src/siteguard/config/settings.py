@@ -29,6 +29,7 @@ class RulesConfig(StrictModel):
 
 class RuntimeConfig(StrictModel):
     model: str = "models/ppe-best.pt"
+    model_sha256: str | None = Field(default=None, pattern=r"^[a-fA-F0-9]{64}$")
     model_mapping: dict[str, str] = Field(
         default_factory=lambda: {"person": "person", "helmet": "helmet", "barehead": "barehead"}
     )
@@ -37,7 +38,7 @@ class RuntimeConfig(StrictModel):
     confidence: float = Field(default=0.15, ge=0, le=1)
     imgsz: int = Field(default=640, ge=32)
     inference_fps: float = Field(default=8.0, gt=0)
-    max_width: int = Field(default=1280, ge=32)
+    max_width: int | None = Field(default=1280, ge=32)
     queue_size: int = Field(default=8, ge=1)
     live_drop_policy: Literal["drop_oldest", "drop_newest"] = "drop_oldest"
     rtsp_transport: Literal["tcp", "udp"] = "tcp"

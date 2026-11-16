@@ -40,14 +40,21 @@ def main() -> None:
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--allow-resolution-change", action="store_true")
     args = parser.parse_args()
     a, b = [json.loads((p/"metrics.json").read_text()) for p in (args.smoke, args.baseline)]
     for key in ("protocol", "data_yaml_sha256", "ultralytics_version", "confusion_classes"):
-        if a[key] != b[key]:
+        left, right = a[key], b[key]
+        if key == "protocol" and args.allow_resolution_change:
+            left = {k: v for k, v in left.items() if k != "imgsz"}
+            right = {k: v for k, v in right.items() if k != "imgsz"}
+        if left != right:
             raise ValueError(f"Evaluation settings differ: {key}")
     if a["protocol"]["imgsz"] != 640:
         raise ValueError("Size diagnostic is defined for the fixed 640 baseline protocol")
     comparison = {"scope": "same official development validation; not independent test",
+        "reference_protocol": a["protocol"], "candidate_protocol": b["protocol"],
+        "size_bin_basis": "same source boxes projected to long-side640 for both models",
         "protocol": b["protocol"], "smoke_checkpoint_sha256": a["checkpoint_sha256"],
         "baseline_checkpoint_sha256": b["checkpoint_sha256"],
         "results": {k: {"smoke": a["results"][k], "baseline": b["results"][k],

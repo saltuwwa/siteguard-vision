@@ -1,0 +1,18 @@
+# Controlled 960px experiment. Batch 8 retained after a genuine CUDA:1 memory probe.
+stage: A
+model: yolo26s.pt
+data: data/local/construction-ppe.source.yaml
+data_schema: source
+validation_report: runs/dataset-local/report.json
+project: runs/train
+name: construction-ppe-12class-960-20261116
+epochs: 80
+batch: 8
+imgsz: 960
+device: '1'
+workers: 0
+seed: 42
+amp: false
+deterministic: true
+patience: 15
+tensorboard: false

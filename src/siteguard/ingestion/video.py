@@ -16,6 +16,7 @@ import cv2
 
 from siteguard.config.settings import RuntimeConfig
 from siteguard.inference.base import ImageArray
+from siteguard.diagnostics import StageTimings
 
 
 class MediaError(RuntimeError):
@@ -54,6 +55,7 @@ class Frame:
     index: int
     timestamp_basis: str
     decoder_timestamp: float | None = None
+    original_shape: tuple[int, int] | None = None
 
 
 @dataclass
@@ -89,6 +91,7 @@ class VideoReader:
         self.done = threading.Event()
         self.error: Exception | None = None
         self.thread: threading.Thread | None = None
+        self.performance = StageTimings()
 
     def _open(self) -> cv2.VideoCapture:
         if self.live:
@@ -137,7 +140,8 @@ class VideoReader:
             expected = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
             self.metrics.source_fps = fps if math.isfinite(fps) else 0.0
             while not self.stop_event.is_set():
-                ok, image = capture.read()
+                with self.performance.measure("decode_read"):
+                    ok, image = capture.read()
                 if not ok:
                     if self.live:
                         raise MediaError("Live decoder disconnected")
@@ -147,7 +151,9 @@ class VideoReader:
                 pts = float(capture.get(cv2.CAP_PROP_POS_MSEC)) / 1000.0
                 raw_pts = pts if math.isfinite(pts) else None
                 basis = "decoder_pts"
-                if not math.isfinite(pts) or pts <= previous:
+                if math.isfinite(pts) and pts < previous:
+                    raise MediaError("Source timestamp regressed; refusing to bridge identities")
+                if not math.isfinite(pts) or pts == previous:
                     if self.live:
                         pts = time.monotonic() - started
                         basis = "receive_monotonic"
@@ -163,12 +169,15 @@ class VideoReader:
                 self.metrics.decoded += 1
                 if sampler.accept(pts):
                     height, width = image.shape[:2]
-                    if width > self.config.max_width:
+                    original_shape = (height, width)
+                    if self.config.max_width is not None and width > self.config.max_width:
                         new_height = max(2, round(height * self.config.max_width / width))
-                        image = cv2.resize(image, (self.config.max_width, new_height))
+                        with self.performance.measure("decode_resize"):
+                            image = cv2.resize(image, (self.config.max_width, new_height),
+                                               interpolation=cv2.INTER_AREA)
                     self.metrics.sampled += 1
                     self._enqueue(Frame(image, pts, datetime.now(UTC), time.monotonic(),
-                                        self.camera_id, session, index, basis, raw_pts))
+                                        self.camera_id, session, index, basis, raw_pts, original_shape))
                 else:
                     self.metrics.sampling_skipped += 1
                 index += 1
