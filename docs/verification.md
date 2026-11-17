@@ -108,6 +108,12 @@ $env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'
 .\.venv\Scripts\python.exe -m pytest -q --basetemp "runs/pytest-$([guid]::NewGuid().ToString('N'))"
 ```
 
+Remote CI for code commit `5bef81cd3138d294113639bc90e2e1d043f6beac`
+[completed successfully](https://github.com/saltuwwa/siteguard-vision/actions/runs/44060041636):
+Ruff passed; mypy found no issues in10 core files; core tests74passed/5skipped;
+the separate genuine ByteTrack/ML CPU job4passed/1deselected. The local missing
+Ruff/mypy modules remain an environment limitation, not a remote check failure.
+
 Earlier restart findings below remain relevant; the explicit bounded retry does
 not establish that the host-restart problem is fixed.
 

@@ -651,6 +651,12 @@
     "ruff": "not installed; local invocation exit1",
     "mypy": "not installed; local invocation exit1",
     "gpu_smoke": "1 passed,2 deselected,exit0; genuine protected960 epoch31 checkpoint on CUDA0",
-    "output_ffmpeg_integrity": "80-frame annotated MP4 fully decoded,exit0"
+    "output_ffmpeg_integrity": "80-frame annotated MP4 fully decoded,exit0",
+    "github_actions": {
+      "code_commit": "5bef81cd3138d294113639bc90e2e1d043f6beac",
+      "run": "https://github.com/saltuwwa/siteguard-vision/actions/runs/44060041636",
+      "core": "Ruff passed; mypy no issues in10 files;74 passed,5 skipped",
+      "real_bytetrack_cpu": "4 passed,1 deselected,exit0"
+    }
   }
 }
