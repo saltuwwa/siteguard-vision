@@ -1,0 +1,24 @@
+# Interrupted 960px epoch31 candidate; not an independent test or production model.
+# Obtain this trusted private checkpoint locally; weights are never committed.
+model: runs/p1-20261117/safety-checkpoints/best.pt
+model_sha256: ace57185e26690f83929c47561dbf3f56bbf4048d613cff6e1daa652463b954f
+model_mapping:
+  Person: person
+  helmet: helmet
+  no_helmet: barehead
+device: '0'
+half: false
+confidence: 0.15
+imgsz: 960
+inference_fps: 8
+max_width: 1280
+queue_size: 8
+database_url: sqlite:///runs/siteguard-candidate.sqlite
+kafka_enabled: false
+rules:
+  min_observations: 4
+  min_duration: 1.5
+  window_seconds: 4
+  max_gap: 0.8
+  min_confidence: 0.6
+  min_head_pixels: 12

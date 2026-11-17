@@ -1,0 +1,656 @@
+{
+  "date": "2026-11-17",
+  "scope": "development-validation and bounded GPU0 retry; not production or independent video accuracy",
+  "hardware": {
+    "device": "physical GPU0 / PCI02:00.0",
+    "gpu": "RTX5090",
+    "torch": "2.8.0+cu128",
+    "ultralytics": "8.4.213",
+    "driver": "616.92",
+    "other_gpu_observed_status": "PCI83:00.0 Disabled; agent made no device changes; external change unconfirmed"
+  },
+  "training_retry": {
+    "configuration": {
+      "stage": "smoke",
+      "model": "runs/p1-20261117/safety-checkpoints/best.pt",
+      "data": "data/local/construction-ppe.source.yaml",
+      "data_schema": "source",
+      "validation_report": "runs/dataset-local/report.json",
+      "project": "runs/train",
+      "name": "construction-ppe-gpu0-retry-20261117-093644",
+      "epochs": 1,
+      "batch": 2,
+      "imgsz": 960,
+      "device": "0",
+      "workers": 0,
+      "seed": 42,
+      "amp": false,
+      "deterministic": true,
+      "patience": 15,
+      "tensorboard": false
+    },
+    "status": "completed",
+    "seconds_excluding_prior_initialization": 185.07430759999988,
+    "peak_allocated_bytes": 2672934912,
+    "peak_reserved_bytes": 4049600512,
+    "epoch_metrics": [
+      {
+        "epoch": 1.0,
+        "time": 158.197,
+        "train/box_loss": 1.25542,
+        "train/cls_loss": 0.87607,
+        "train/l1_loss": 0.00853,
+        "metrics/precision(B)": 0.85449,
+        "metrics/recall(B)": 0.75946,
+        "metrics/mAP50(B)": 0.81453,
+        "metrics/mAP50-95(B)": 0.55824,
+        "val/box_loss": 1.00597,
+        "val/cls_loss": 0.67844,
+        "val/l1_loss": 0.00688,
+        "lr/pg0": 0.000625,
+        "lr/pg1": 0.000625,
+        "lr/pg2": 0.000625
+      }
+    ],
+    "weights": {
+      "best": {
+        "path": "runs\\train\\construction-ppe-gpu0-retry-20261117-093644\\weights\\best.pt",
+        "sha256": "2d6fc35d55193ceacbc040b4921f2b42884eb52293301d5cfcd9d5f761dd0453"
+      },
+      "last": {
+        "path": "runs\\train\\construction-ppe-gpu0-retry-20261117-093644\\weights\\last.pt",
+        "sha256": "f5dfe218dc452aaa0ab28865d298517471b4d8d5f216549975c9d713a61020a8"
+      }
+    },
+    "lineage": "warm-start from epoch31 with optimizer reset, batch2, new one-epoch schedule; not promoted as quality improvement",
+    "reboots_observed_during_this_bounded_retry": false,
+    "long_run_stability_proven": false
+  },
+  "checkpoint_protection": {
+    "baseline": "2ccf91ed1827aeb0fb5b35f4fec42d3127feddbe7b9d1f050be3a02426fc45c0",
+    "candidate": "ace57185e26690f83929c47561dbf3f56bbf4048d613cff6e1daa652463b954f"
+  },
+  "comparison": {
+    "reference": "completed640 baseline",
+    "candidate": "interrupted960 epoch31; candidate only",
+    "interpretation": "same evaluation settings except imgsz; training interruption, GPU and RNG change prevent a causal resolution-only claim",
+    "reference_protocol": {
+      "imgsz": 640,
+      "batch": 2,
+      "device": 0,
+      "workers": 0,
+      "conf": 0.001,
+      "iou": 0.7,
+      "max_det": 300,
+      "half": false,
+      "seed": 42,
+      "deterministic": true,
+      "split": "val"
+    },
+    "candidate_protocol": {
+      "imgsz": 960,
+      "batch": 2,
+      "device": 0,
+      "workers": 0,
+      "conf": 0.001,
+      "iou": 0.7,
+      "max_det": 300,
+      "half": false,
+      "seed": 42,
+      "deterministic": true,
+      "split": "val"
+    },
+    "validation_content_sha256": "8a81b773155277c56983945a04f47ea266b0e28f9c87256c58ddfea840cca3b5",
+    "reference_metrics": {
+      "metrics/precision(B)": 0.9123999428712711,
+      "metrics/recall(B)": 0.7596494507954047,
+      "metrics/mAP50(B)": 0.8231868648877058,
+      "metrics/mAP50-95(B)": 0.6005733950709853,
+      "fitness": 0.6005733950709853
+    },
+    "candidate_metrics": {
+      "metrics/precision(B)": 0.8894141054126469,
+      "metrics/recall(B)": 0.799793219774917,
+      "metrics/mAP50(B)": 0.8457206471257139,
+      "metrics/mAP50-95(B)": 0.6195636711121522,
+      "fitness": 0.6195636711121522
+    },
+    "reference_classwise": [
+      {
+        "class_id": 0,
+        "class": "helmet",
+        "precision": 0.942760694525335,
+        "recall": 0.8403329743679667,
+        "ap50": 0.8973620769823545,
+        "ap50_95": 0.7195419767274581
+      },
+      {
+        "class_id": 1,
+        "class": "gloves",
+        "precision": 0.9218210056144726,
+        "recall": 0.8046480008796318,
+        "ap50": 0.8687517927275072,
+        "ap50_95": 0.7003718526370972
+      },
+      {
+        "class_id": 2,
+        "class": "vest",
+        "precision": 0.9631790877610278,
+        "recall": 0.888235294117647,
+        "ap50": 0.9154644017345314,
+        "ap50_95": 0.7424638549888487
+      },
+      {
+        "class_id": 3,
+        "class": "boots",
+        "precision": 0.8789214814289577,
+        "recall": 0.7671517671517671,
+        "ap50": 0.8411466839561204,
+        "ap50_95": 0.6486506206015328
+      },
+      {
+        "class_id": 4,
+        "class": "goggles",
+        "precision": 0.9572472984000333,
+        "recall": 0.9640287769784173,
+        "ap50": 0.9744263199369582,
+        "ap50_95": 0.7106458216932844
+      },
+      {
+        "class_id": 5,
+        "class": "Person",
+        "precision": 0.9534710597947234,
+        "recall": 0.9313929313929314,
+        "ap50": 0.9692645486470866,
+        "ap50_95": 0.8310104200502126
+      },
+      {
+        "class_id": 6,
+        "class": "no_helmet",
+        "precision": 0.8938032079399454,
+        "recall": 0.6582781610923929,
+        "ap50": 0.7386743742916992,
+        "ap50_95": 0.4567024357173315
+      },
+      {
+        "class_id": 7,
+        "class": "no_goggle",
+        "precision": 0.8664605749715032,
+        "recall": 0.39571602051203286,
+        "ap50": 0.5965970802195024,
+        "ap50_95": 0.1983901138909897
+      },
+      {
+        "class_id": 8,
+        "class": "no_gloves",
+        "precision": 0.8706568736096604,
+        "recall": 0.645320197044335,
+        "ap50": 0.7215928695328855,
+        "ap50_95": 0.45908031281198225
+      },
+      {
+        "class_id": 9,
+        "class": "no_boots",
+        "precision": 0.8892636132981269,
+        "recall": 0.7218484008654807,
+        "ap50": 0.7878739629595857,
+        "ap50_95": 0.6381766107601139
+      },
+      {
+        "class_id": 10,
+        "class": "forklift",
+        "precision": 0.8984552199388812,
+        "recall": 0.821917808219178,
+        "ap50": 0.8422687210988412,
+        "ap50_95": 0.605244043111208
+      },
+      {
+        "class_id": 11,
+        "class": "no_vest",
+        "precision": 0.9127591971725879,
+        "recall": 0.676923076923077,
+        "ap50": 0.7248195465653975,
+        "ap50_95": 0.4966026778617647
+      }
+    ],
+    "candidate_classwise": [
+      {
+        "class_id": 0,
+        "class": "helmet",
+        "precision": 0.966588955544213,
+        "recall": 0.8856220110265276,
+        "ap50": 0.9194379484725589,
+        "ap50_95": 0.7521170293719778
+      },
+      {
+        "class_id": 1,
+        "class": "gloves",
+        "precision": 0.9265348055381231,
+        "recall": 0.8320209973753281,
+        "ap50": 0.8875117881022084,
+        "ap50_95": 0.7381213964963823
+      },
+      {
+        "class_id": 2,
+        "class": "vest",
+        "precision": 0.9583729054876646,
+        "recall": 0.9441176470588235,
+        "ap50": 0.958017777200206,
+        "ap50_95": 0.7734418916670702
+      },
+      {
+        "class_id": 3,
+        "class": "boots",
+        "precision": 0.8322789827521254,
+        "recall": 0.8232848232848233,
+        "ap50": 0.8582153905242952,
+        "ap50_95": 0.6727442801157235
+      },
+      {
+        "class_id": 4,
+        "class": "goggles",
+        "precision": 0.9236616804194588,
+        "recall": 0.9575251060551339,
+        "ap50": 0.9725837889323413,
+        "ap50_95": 0.7261083115344141
+      },
+      {
+        "class_id": 5,
+        "class": "Person",
+        "precision": 0.9519980377159719,
+        "recall": 0.9483312692448936,
+        "ap50": 0.9739899074024014,
+        "ap50_95": 0.8167901468564249
+      },
+      {
+        "class_id": 6,
+        "class": "no_helmet",
+        "precision": 0.8777620553852815,
+        "recall": 0.7220953683929814,
+        "ap50": 0.8035909011491693,
+        "ap50_95": 0.48712864572321257
+      },
+      {
+        "class_id": 7,
+        "class": "no_goggle",
+        "precision": 0.6662529261099183,
+        "recall": 0.5609756097560976,
+        "ap50": 0.556067151970049,
+        "ap50_95": 0.16857296154016865
+      },
+      {
+        "class_id": 8,
+        "class": "no_gloves",
+        "precision": 0.898561523048544,
+        "recall": 0.6545499164020109,
+        "ap50": 0.7495560958049128,
+        "ap50_95": 0.462802060148122
+      },
+      {
+        "class_id": 9,
+        "class": "no_boots",
+        "precision": 0.903162818542095,
+        "recall": 0.7335632629048733,
+        "ap50": 0.855842403222471,
+        "ap50_95": 0.677777930136253
+      },
+      {
+        "class_id": 10,
+        "class": "forklift",
+        "precision": 0.8459850304065879,
+        "recall": 0.8277403181052025,
+        "ap50": 0.8485728937645555,
+        "ap50_95": 0.6231143693661217
+      },
+      {
+        "class_id": 11,
+        "class": "no_vest",
+        "precision": 0.9218095440017783,
+        "recall": 0.7076923076923077,
+        "ap50": 0.7652617189633988,
+        "ap50_95": 0.5360450303899557
+      }
+    ],
+    "reference_fixed_counts": {
+      "helmet": {
+        "tp": 251,
+        "fn": 43,
+        "fp": 27,
+        "missed_background": 37
+      },
+      "no_helmet": {
+        "tp": 125,
+        "fn": 54,
+        "fp": 30,
+        "missed_background": 47
+      }
+    },
+    "candidate_fixed_counts": {
+      "helmet": {
+        "tp": 262,
+        "fn": 32,
+        "fp": 12,
+        "missed_background": 29
+      },
+      "no_helmet": {
+        "tp": 132,
+        "fn": 47,
+        "fp": 32,
+        "missed_background": 40
+      }
+    },
+    "head_size_recall_same_640_source_bins": {
+      "reference": {
+        "under8": {
+          "ground_truth": 57,
+          "correct": 21,
+          "missed_or_wrong": 36,
+          "recall": 0.3684210526315789
+        },
+        "8to16": {
+          "ground_truth": 29,
+          "correct": 20,
+          "missed_or_wrong": 9,
+          "recall": 0.6896551724137931
+        },
+        "16to32": {
+          "ground_truth": 23,
+          "correct": 19,
+          "missed_or_wrong": 4,
+          "recall": 0.8260869565217391
+        },
+        "32plus": {
+          "ground_truth": 70,
+          "correct": 65,
+          "missed_or_wrong": 5,
+          "recall": 0.9285714285714286
+        }
+      },
+      "candidate": {
+        "under8": {
+          "ground_truth": 57,
+          "correct": 27,
+          "missed_or_wrong": 30,
+          "recall": 0.47368421052631576
+        },
+        "8to16": {
+          "ground_truth": 29,
+          "correct": 23,
+          "missed_or_wrong": 6,
+          "recall": 0.7931034482758621
+        },
+        "16to32": {
+          "ground_truth": 23,
+          "correct": 17,
+          "missed_or_wrong": 6,
+          "recall": 0.7391304347826086
+        },
+        "32plus": {
+          "ground_truth": 70,
+          "correct": 65,
+          "missed_or_wrong": 5,
+          "recall": 0.9285714285714286
+        }
+      }
+    }
+  },
+  "person_gate_audit": {
+    "scope": "cached genuine 640px development-validation predictions; not real-video or event accuracy",
+    "matching": "person-only one-to-one IoU>=0.5; dense means >=4 source-annotated persons",
+    "operating_points": {
+      "0.15": {
+        "tp": 457,
+        "fn": 24,
+        "fp": 68,
+        "predicted_people": 525,
+        "dense_gt": 258,
+        "dense_tp": 240,
+        "dense_fp": 62,
+        "recall": 0.9501039501039501,
+        "precision": 0.8704761904761905,
+        "dense_recall": 0.9302325581395349
+      },
+      "0.25": {
+        "tp": 450,
+        "fn": 31,
+        "fp": 35,
+        "predicted_people": 485,
+        "dense_gt": 258,
+        "dense_tp": 233,
+        "dense_fp": 32,
+        "recall": 0.9355509355509356,
+        "precision": 0.9278350515463918,
+        "dense_recall": 0.9031007751937985
+      },
+      "0.4": {
+        "tp": 448,
+        "fn": 33,
+        "fp": 21,
+        "predicted_people": 469,
+        "dense_gt": 258,
+        "dense_tp": 231,
+        "dense_fp": 19,
+        "recall": 0.9313929313929314,
+        "precision": 0.9552238805970149,
+        "dense_recall": 0.8953488372093024
+      },
+      "0.5": {
+        "tp": 443,
+        "fn": 38,
+        "fp": 12,
+        "predicted_people": 455,
+        "dense_gt": 258,
+        "dense_tp": 226,
+        "dense_fp": 10,
+        "recall": 0.920997920997921,
+        "precision": 0.9736263736263736,
+        "dense_recall": 0.875968992248062
+      }
+    },
+    "default_new_track_confidence": 0.5,
+    "threshold_changed": false
+  },
+  "pipeline": {
+    "scope": "genuine empty-office MP4 only; no construction-worker quality claim",
+    "model_sha256": "ace57185e26690f83929c47561dbf3f56bbf4048d613cff6e1daa652463b954f",
+    "status": "completed",
+    "processed_frames": 80,
+    "processed_fps": 18.219084491005898,
+    "ingestion": {
+      "decoded": 150,
+      "sampled": 80,
+      "sampling_skipped": 70,
+      "dropped": 0,
+      "reconnects": 0,
+      "source_fps": 15.0,
+      "timestamp_fallbacks": 0,
+      "errors": []
+    },
+    "latency_seconds": {
+      "basis": "decode-to-output; excludes camera/network and async event commit",
+      "sample_count": 80,
+      "p50": 0.43699999999989814,
+      "p95": 0.8447500000000218,
+      "retained_samples": 80
+    },
+    "confirmed_events": 0,
+    "performance": {
+      "main_thread": {
+        "frame_wait": {
+          "count": 81,
+          "total_seconds": 0.0468280000050072,
+          "max_seconds": 0.041772100000343926,
+          "retained_samples": 81,
+          "p50_seconds": 3.710000055434648e-05,
+          "p95_seconds": 0.00019150000025547342,
+          "percentile_scope": "last 2048 observations"
+        },
+        "scene_change": {
+          "count": 80,
+          "total_seconds": 0.15418399999816756,
+          "max_seconds": 0.007261400000061258,
+          "retained_samples": 80,
+          "p50_seconds": 0.0017233500007023395,
+          "p95_seconds": 0.004158504999713841,
+          "percentile_scope": "last 2048 observations"
+        },
+        "detector_inference": {
+          "count": 80,
+          "total_seconds": 2.9867447000005996,
+          "max_seconds": 0.6438543000003847,
+          "retained_samples": 80,
+          "p50_seconds": 0.025607149999359535,
+          "p95_seconds": 0.06329392499997083,
+          "percentile_scope": "last 2048 observations"
+        },
+        "bytetrack": {
+          "count": 80,
+          "total_seconds": 0.021365600000535778,
+          "max_seconds": 0.0023082999996404396,
+          "retained_samples": 80,
+          "p50_seconds": 0.0002350500003558409,
+          "p95_seconds": 0.0003923199994915194,
+          "percentile_scope": "last 2048 observations"
+        },
+        "head_association": {
+          "count": 80,
+          "total_seconds": 0.0007407000002785935,
+          "max_seconds": 4.090000038559083e-05,
+          "retained_samples": 80,
+          "p50_seconds": 8.600000001024455e-06,
+          "p95_seconds": 1.3714999749936396e-05,
+          "percentile_scope": "last 2048 observations"
+        },
+        "temporal_rules": {
+          "count": 80,
+          "total_seconds": 0.0005106999988129246,
+          "max_seconds": 1.810000048863003e-05,
+          "retained_samples": 80,
+          "p50_seconds": 6.100000064179767e-06,
+          "p95_seconds": 1.0104999591931118e-05,
+          "percentile_scope": "last 2048 observations"
+        },
+        "annotation_and_encode": {
+          "count": 80,
+          "total_seconds": 0.7626833999993323,
+          "max_seconds": 0.0274768999997832,
+          "retained_samples": 80,
+          "p50_seconds": 0.007951600000069448,
+          "p95_seconds": 0.019224749999921183,
+          "percentile_scope": "last 2048 observations"
+        },
+        "frame_jsonl": {
+          "count": 80,
+          "total_seconds": 0.010217600004580163,
+          "max_seconds": 0.0004029000001537497,
+          "retained_samples": 80,
+          "p50_seconds": 0.00010284999962095753,
+          "p95_seconds": 0.0003395099998670048,
+          "percentile_scope": "last 2048 observations"
+        },
+        "camera_heartbeat": {
+          "count": 11,
+          "total_seconds": 0.33085399999890797,
+          "max_seconds": 0.04826940000020841,
+          "retained_samples": 11,
+          "p50_seconds": 0.026581899999655434,
+          "p95_seconds": 0.047822850000102335,
+          "percentile_scope": "last 2048 observations"
+        },
+        "shutdown": {
+          "count": 3,
+          "total_seconds": 0.0021630000010190997,
+          "max_seconds": 0.0020087000002604327,
+          "retained_samples": 3,
+          "p50_seconds": 0.00014200000077835284,
+          "p95_seconds": 0.0018220300003122245,
+          "percentile_scope": "last 2048 observations"
+        }
+      },
+      "decoder_thread": {
+        "decode_read": {
+          "count": 151,
+          "total_seconds": 0.6510407000050691,
+          "max_seconds": 0.022131299999273324,
+          "retained_samples": 151,
+          "p50_seconds": 0.003139599999485654,
+          "p95_seconds": 0.010404399999970337,
+          "percentile_scope": "last 2048 observations"
+        }
+      },
+      "video_output": {
+        "annotation_render": {
+          "count": 80,
+          "total_seconds": 0.24449010000080307,
+          "max_seconds": 0.007751199999802338,
+          "retained_samples": 80,
+          "p50_seconds": 0.002762600000096427,
+          "p95_seconds": 0.004572589999997945,
+          "percentile_scope": "last 2048 observations"
+        },
+        "video_encode": {
+          "count": 80,
+          "total_seconds": 0.4954764999993131,
+          "max_seconds": 0.020248499999979686,
+          "retained_samples": 80,
+          "p50_seconds": 0.004683349999595521,
+          "p95_seconds": 0.013399890000118824,
+          "percentile_scope": "last 2048 observations"
+        }
+      },
+      "event_io_thread": {},
+      "gpu_memory": {
+        "device": 0,
+        "allocated_bytes": 71639040,
+        "reserved_bytes": 209715200,
+        "peak_allocated_bytes": 155910144,
+        "peak_reserved_bytes": 209715200,
+        "scope": "process allocator since last reset; includes model initialization"
+      },
+      "detector_initialization_seconds": 32.98623110000062,
+      "fps_including_detector_initialization": 2.140340459836777,
+      "sampling_target_fps": 8.0,
+      "meets_sampling_target": true,
+      "scope": "processing FPS includes cold inference and I/O drain, excludes prior detector construction; concurrent totals overlap"
+    }
+  },
+  "additional_data": {
+    "name": "Hard Hat Workers",
+    "selected_candidate_version": 10,
+    "catalog_url": "https://universe.roboflow.com/joseph-nelson/hard-hat-workers/dataset/10",
+    "catalog_license_claim": "Public Domain; verify downloaded export and upstream provenance",
+    "catalog_images": 7035,
+    "catalog_splits": {
+      "train": 4916,
+      "val": 1413,
+      "test": 706
+    },
+    "catalog_augmentation": "none",
+    "locally_downloaded": false,
+    "annotations_validated": false,
+    "added_to_training": false,
+    "blockers": [
+      "No versioned local export",
+      "No configured Roboflow API key",
+      "Shell DNS unavailable"
+    ],
+    "mapping": "unverified; do not merge head/person labels by name; inspect body-label completeness before joint12-class training"
+  },
+  "construction_video": {
+    "source_url": "https://www.pexels.com/video/aerial-view-of-construction-crew-at-work-35631532/",
+    "catalog_duration_seconds": 37,
+    "license_url": "https://www.pexels.com/license/",
+    "status": "download failed: URLError11001 DNS; content not inspected",
+    "download_helper": "scripts/download_construction_demo.py",
+    "trained_on_demo": false,
+    "independent_accuracy_claim": false
+  },
+  "checks": {
+    "pytest_workspace_temp": "76 passed,3 skipped,exit0",
+    "pytest_default_temp": "17 failed,59 passed,3 skipped: sandbox Temp atomic rename denied WinError5",
+    "ruff": "not installed; local invocation exit1",
+    "mypy": "not installed; local invocation exit1",
+    "gpu_smoke": "1 passed,2 deselected,exit0; genuine protected960 epoch31 checkpoint on CUDA0",
+    "output_ffmpeg_integrity": "80-frame annotated MP4 fully decoded,exit0"
+  }
+}

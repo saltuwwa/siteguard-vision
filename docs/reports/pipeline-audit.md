@@ -164,3 +164,27 @@ checkpoints are best(epoch31) and last(epoch32); the 960 experiment is incomplet
 Original files and the recovered 640 baseline remain protected. See verification
 for checkpoint hashes, missing metrics, recovery tests and the read-only event
 collector. No particular GPU, driver or PSU has been identified as the cause.
+
+The user's first event export was saturated by 120 corrected WHEA17 warnings in
+2.72 seconds after restart. PnP parent/child topology locates the reporting root
+port 80:1c.4 on the branch containing GPU1 (83:00.0 in nvidia-smi). This is a
+verified branch association, not proof of a faulty card or reboot cause. The
+collector now separates corrected-warning samples from critical restart/bugcheck
+records so an error storm cannot consume their shared sample limit. Those missing
+critical records and physical slot/riser/power details remain outstanding. Do not
+resume training or stress-test either GPU automatically.
+
+The second export confirms a Windows bugcheck: Event1001 reports0x7F, parameter8
+(double fault); Event41 reports equivalent0x1000007F with matching parameters.
+This supersedes an explanation based only on Event41 or apparent power loss,
+but does not identify the failing component. After the user copied the protected
+minidump into ignored runs/, SDK CDB and matching local kernel/NVIDIA images
+unwound134 frames,128 in nvlddmkm.sys (driver616.92), with repeating offset
+sequences. This is consistent with stack exhaustion on a NVIDIA driver path;
+hardware-triggered behavior versus a software defect remains unresolved. Public
+kernel symbols cannot be fetched because symbol-server DNS resolution fails.
+Only export names are available; the !analyze WRONG_SYMBOLS placeholder is not
+a valid culprit diagnosis and typed stack limits remain unverified. Corrected
+PCIe warnings on the GPU1 branch persist after reboot and are separate evidence,
+not an established cause of the double fault. No driver change, GPU workload or
+reboot was performed. Exact commands and dump fingerprint are in verification.

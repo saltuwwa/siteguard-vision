@@ -1,10 +1,115 @@
-# SiteGuard verification - P1, 2026-11-16
+# SiteGuard verification - P1, 2026-11-17
 
 The 640px baseline checkpoint and dataset remain unchanged. P1 adds rejection diagnostics,
 bounded stage timers, failure-path reports, explicit checkpoint/device/precision checks,
 conservative association corrections and distinct detection/track/event annotation styles.
 See [technical audit](reports/pipeline-audit.md) and [machine-readable runtime report](reports/p1-runtime-20261116.json).
 No frontend source or endpoint schema was changed.
+
+## Latest: explicitly requested GPU0 retry and checkpoint selection
+
+After crash analysis, the user explicitly requested another GPU0 attempt. Three
+real backward batches at960px/batch2/FP32 completed with exit0, peak allocated
+2,483,053,568 bytes. A separate one-epoch warm-start from the protected960px
+epoch31 checkpoint then completed on CUDA:0 with exit0,185.074 seconds measured
+inside the training runner, peak allocated2,672,934,912 and reserved4,049,600,512
+bytes. Startup before the runner's training clock is excluded. All800train/200val
+images and12 original classes were preserved and revalidated against their hashes.
+
+Actual run: `runs/train/construction-ppe-gpu0-retry-20261117-093644/`; config:
+`configs/train-gpu0-retry.yaml`. Best SHA256:
+`2d6fc35d55193ceacbc040b4921f2b42884eb52293301d5cfcd9d5f761dd0453`;
+last SHA256: `f5dfe218dc452aaa0ab28865d298517471b4d8d5f216549975c9d713a61020a8`.
+Native epoch validation mAP50-95 was0.55824. This short new schedule reset the
+optimizer, changed batch8 to2 and did not improve the established baseline. It
+is **not promoted**. Original640 and960 epoch31 hashes remain unchanged. No
+extra dataset was silently added and no long training run was started.
+
+During the attempt, PnP reported the83:00.0 card as **Disabled**, while02:00.0
+remained Started. The agent made no device changes. Whether the user or another
+process changed this is unconfirmed. No reboot was observed during this bounded
+attempt, but it cannot prove long-run GPU0 stability or diagnose either card.
+
+Fresh paired validation used batch2/FP32/device0/workers0/conf0.001/IoU0.7,
+the same200 image/label bytes and class mapping; only imgsz differed:
+
+- Completed640 baseline at640: mAP50-95=0.6005734. Fixed no_helmet TP/FN/FP,
+  confidence0.25/IoU0.5:125/54/30. This re-evaluation batch differs from the
+  historical batch8 report0.6008812; the original result is preserved.
+- Interrupted960 epoch31 at960: mAP50-95=0.6195637. Person P/R/AP50-95:
+  0.951998/0.948331/0.816790; helmet:0.966589/0.885622/0.752117;
+  no_helmet:0.877762/0.722095/0.487129. Fixed no_helmet TP/FN/FP:132/47/32.
+- On identical source head-size bins projected to640px, under8px recall was
+  21/57 versus27/57;8-16px20/29 versus23/29;16-32px19/23 versus17/23;
+  32+px65/70 for both. Higher resolution did not improve every size bin.
+
+This supports selecting the960 epoch31 **candidate for further demo testing**,
+not a causal resolution-only conclusion: training interruption, GPU change and
+restarted RNG remain confounders, and the96080-epoch experiment is incomplete.
+There is no independent source-disjoint or production accuracy claim. Full
+per-class values, source-bin counts, protocols and hardware are in
+[the measured retry report](reports/retry-20261117.json).
+
+Cached genuine640 predictions were also audited for body detection. At0.15,
+457/481 annotated persons matched with68 extra boxes; at0.5,443 matched with12
+extra boxes. For images with at least4 labeled people, the corresponding
+matches were240/258 and226/258. Thus low-confidence proposals are different
+from new tracks (default threshold0.5). These still-image results are not video
+recall; correct persistent identities are not labeled. Thresholds remain unchanged.
+Reviewed six crowded-image panels are local in
+`runs/retry-20261117/worker-audit/dense-workers.jpg`, explicitly labeled as still
+validation rather than CCTV.
+
+The candidate passed the actual YoloDetector -> ByteTrack -> association -> rules
+-> EventSink path on the existing10-second **empty-office** recording:150 decoded,
+80 sampled/output frames,zero drops,zero events,18.219 processingFPS excluding
+32.986s detector construction;2.140FPS including that construction on this short
+clip. Decode-to-output p50/p95=437/844.75ms, including offline queueing. Annotated
+MP4 fully decoded through FFmpeg, exit0. Output directory:
+`runs/retry-20261117/office-960/`. This verifies plumbing, not worker detection,
+identity quality, event recall or false alerts/hour on a construction site.
+
+An external construction demo candidate was found, with a documented free-use
+license: [37-second aerial construction crew clip](https://www.pexels.com/video/aerial-view-of-construction-crew-at-work-35631532/).
+Its actual content has not been downloaded or inspected; it is not claimed to be
+CCTV or ground truth. Download failed with DNS11001 in this shell; browser control
+also failed before connection because the runtime rejected windows.sandbox=mxc.
+No user runtime settings were changed. `scripts/download_construction_demo.py`
+records source/license/checksum and probes media before finalizing; it performs
+no GPU work. A user PowerShell session with normal network access can run:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/download_construction_demo.py
+# After download and visual review; source is excluded from training:
+.\.venv\Scripts\siteguard.exe analyze --input data/demo/pexels-35631532/source.mp4 --output runs/construction-demo-new --config configs/runtime-960-candidate.yaml
+```
+
+Hard Hat Workers v10 is the selected expansion candidate; no export/API key is
+available locally and shell DNS is unavailable. Its advertised7035 images are
+catalog counts, not a locally audited import. See the dataset guide for semantic,
+license, completeness and leakage gates before any training merge.
+
+Actual checks: CPU tests76passed/3skipped/exit0 with a fresh `--basetemp` under
+ignored runs/. Default sandbox Temp first produced17 failures/59passes/3skips,
+all failures caused by denied atomic rename (WinError5). Assertions and atomic
+report writes were preserved. Genuine candidate GPU smoke1passed/2deselected,
+exit0. Local Ruff and mypy both failed with missing-module errors; no dependency
+upgrade was attempted. Exact representative commands:
+
+```powershell
+$env:CUDA_VISIBLE_DEVICES='0'
+$env:YOLO_AUTOINSTALL='false'
+$env:CUBLAS_WORKSPACE_CONFIG=':4096:8'
+# Choose a new name in the config before repeating a training run:
+.\.venv\Scripts\siteguard.exe train --config configs/train-gpu0-retry.yaml
+.\.venv\Scripts\python.exe scripts/analyze_checkpoint.py --model runs/p1-20261117/safety-checkpoints/best.pt --data data/local/construction-ppe.source.yaml --output runs/eval-960-new --imgsz 960 --batch 2 --device 0
+$env:CUDA_VISIBLE_DEVICES='-1'
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD='1'
+.\.venv\Scripts\python.exe -m pytest -q --basetemp "runs/pytest-$([guid]::NewGuid().ToString('N'))"
+```
+
+Earlier restart findings below remain relevant; the explicit bounded retry does
+not establish that the host-restart problem is fixed.
 
 ## 2026-11-17: host-restart blocker; GPU work stopped
 
@@ -50,6 +155,111 @@ nearby driver events; Event41 alone does not establish the cause, as explained b
 The earlier pytest FD-capture issue is separate from a whole-system reboot.
 Post-reboot CPU-only regression tests: **72 passed,3 skipped,exit0**, with
 CUDA_VISIBLE_DEVICES=-1. GPU work remains deferred; no automatic retry is scheduled.
+
+### User-collected Windows events: PCIe branch identified, cause unresolved
+
+The externally collected report `runs/reboot-diagnostics-20261117-134944/` contains
+120 WHEA-Logger 17 corrected PCIe errors over 2.72 seconds, 08:26:48.906 through
+08:26:51.626 UTC. These warnings occurred after the observed 08:21 UTC restart.
+All sampled records name root port 80:1c.4 (VEN_8086, DEV_7F3C). Read-only
+`pnputil /enum-devices` parent/child relations connect that port directly to the
+RTX 5090 at 83:00.0, **GPU1 in nvidia-smi numbering**. GPU0 at 02:00.0 has a
+different parent. Windows Task Manager numbering has not been correlated.
+
+This identifies the reporting PCIe branch, not a defective graphics card or the
+cause of the restart. Card, slot/riser, motherboard, firmware and power remain
+unresolved possibilities. Corrected errors alone do not establish a fatal error;
+see [Microsoft WHEA error definitions](https://learn.microsoft.com/en-us/windows-hardware/drivers/whea/hardware-errors-and-error-sources).
+GPU1 negotiated x4 while GPU0 negotiated x16 at the idle query; slot wiring and
+idle link power management must be considered before interpreting link readings.
+There is no basis to declare GPU0 safe: the second training interruption occurred
+while using CUDA:0.
+
+The first collector's shared 120-event cap was entirely consumed by corrected
+warnings, leaving restart/bugcheck records unsampled. The updated read-only
+collector exports critical events, important WHEA errors and a bounded corrected
+error sample separately, plus display-device topology. Repeat the same command
+above to obtain the missing restart evidence. No GPU workload, device disable,
+driver change, BIOS change or power-limit change was performed. Script syntax
+was checked with the PowerShell parser; actual event collection still requires
+the external user PowerShell session. Raw event logs and topology remain ignored.
+
+### Second event export: a Windows bugcheck is confirmed
+
+The user reran the collector at 14:13 local time. The new ignored report
+`runs/reboot-diagnostics-20261117-141309/` contains four critical records:
+WER-SystemErrorReporting1001, Kernel-Power41, EventLog6005 and6008. Event1001,
+recorded at08:21:45.135 UTC after boot, reports `0x0000007f` with parameter1=`8`
+and a saved minidump. Event41 records decimal268435583 (`0x1000007f`) with the
+same four parameters. Microsoft documents that
+[0x1000007F has the same meaning and parameters as0x7F](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/bug-check-0x1000007f--unexpected-kernel-mode-trap-m).
+Parameter8 is a double fault; documented possibilities include a kernel stack
+overflow and hardware problems. The
+[Microsoft debugging procedure](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/bug-check-0x7f--unexpected-kernel-mode-trap)
+starts with `!analyze -v` and stack inspection. The stop code alone does not
+identify NVIDIA, a particular GPU, RAM, CPU, PSU or a driver as the cause.
+
+No WHEA18/19/20/46/47 matched this query of the surviving System log. That is
+not proof that no such error ever occurred. The bounded corrected-error sample
+still contains30 WHEA17 records on the same80:1c.4 branch, at09:09:10 UTC,
+after reboot. These warnings and the bugcheck must not be conflated into a
+proven causal chain. Event6008's textual prior-shutdown time also differs from
+observed boot time; postboot record timestamps are not exact crash timestamps.
+
+Initially, reading the reported minidump under Windows/Minidump was denied to
+this execution environment. The user subsequently copied it into the existing
+ignored report directory. No ACL changes or public dump upload were performed.
+
+### Copied minidump: deeply repeating NVIDIA kernel-driver stack
+
+The copied minidump is13,975,231 bytes, SHA256
+`3f207d08a96dac2d6ca69a6fcdcfb936b7a0190d952a83b8ea79c10d82f52454`.
+Windows SDK CDB10.0.26100.3323 opened it successfully. Its recorded crash time is
+**2026-11-17 13:20:52.998 +05:00**, with system uptime18:19:20.813. It confirms
+the double-fault stop code and the parameters from the event export.
+
+Initial analysis lacked the kernel image and PDB symbols. A noisy symbol reload
+recorded `800C2EE7 / ERROR_INTERNET_NAME_NOT_RESOLVED` for Microsoft's symbol
+server. No matching local PDB cache was found. Loading the installed kernel image
+resolved image/unwind information: version10.0.26100.9444, PE reproducible-build
+hash5ADFD5D6 and image size0x1450000 match the dump. That hash is not a2018 build
+date; CDB explicitly identifies `/Brepro`. The installed NVIDIA image likewise
+matches PE hash6A9B4070/image size0x6D3E000. Its file version32.0.16.1692
+corresponds to the observed driver616.92.
+
+With matching local images and the recorded trap frame, `kv 100` unwound134
+frames, **128 inside nvlddmkm.sys**. Repeated NVIDIA offset sequences include
+0x12a0e3,0x12c299,0x2efb06,0xb8fb6a and0x7377f8, each appearing five times.
+This is concrete evidence of a deeply repeating NVIDIA kernel-driver path,
+consistent with kernel stack exhaustion. It does not prove a driver software
+bug rather than hardware-triggered driver behavior, nor identify GPU0 orGPU1.
+The independently observed GPU1-branch PCIe warnings remain separate evidence.
+
+Only export symbols are available. Nearest-export names must not be treated as
+exact private function names. `!analyze -v` still reports WRONG_SYMBOLS because
+kernel PDB types are missing; its placeholder process/bucket are not a valid
+culprit diagnosis. Typed thread stack limits and a full symbolic analysis remain
+unverified. See [Microsoft on missing symbols](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbol-problems-while-debugging).
+
+Actual local commands used the existing ignored report directory:
+
+```powershell
+$report = Join-Path (Get-Location) 'runs/reboot-diagnostics-20261117-141309'
+$driverImage = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\nvlddmkm').ImagePath
+$driverImage = $driverImage.Replace('\SystemRoot', $env:SystemRoot)
+$imageDirs = "$env:SystemRoot\System32;$(Split-Path -Parent $driverImage)"
+& 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe' `
+  -z "$report\crash.dmp" -i $imageDirs -y "$report\symbols" `
+  -logo "$report\cdb-verified-images.log" `
+  -c '.reload /f nt; .reload /f nvlddmkm; .trap ffff820175b75e70; kv 100; lmvm nt; lmvm nvlddmkm; q'
+```
+
+The trap address is specific to this dump. The debugger exited0, which confirms
+command execution, not successful PDB acquisition or a repaired computer.
+Raw logs, dump and structured analysis remain ignored. No training, stress test,
+driver installation or reboot was initiated. Next investigation is the repeating
+NVIDIA driver path with proper symbols and a controlled driver-version check;
+the PCIe branch still requires hardware/slot/power assessment if errors persist.
 
 ## P1 measured findings
 

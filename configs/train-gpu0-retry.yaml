@@ -1,0 +1,18 @@
+# Bounded retry, not a controlled improvement experiment; use a new name to repeat.
+stage: smoke
+model: runs/p1-20261117/safety-checkpoints/best.pt
+data: data/local/construction-ppe.source.yaml
+data_schema: source
+validation_report: runs/dataset-local/report.json
+project: runs/train
+name: construction-ppe-gpu0-retry-20261117-093644
+epochs: 1
+batch: 2
+imgsz: 960
+device: '0'
+workers: 0
+seed: 42
+amp: false
+deterministic: true
+patience: 15
+tensorboard: false

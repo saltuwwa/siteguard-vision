@@ -111,3 +111,36 @@ visible no-protective-helmet category, with annotation noise, rather than a
 guarantee of literal uncovered scalp. The runtime name `barehead` is an internal
 mapping, not proof that every source annotation satisfies stricter semantics.
 See the verification record for the exact image IDs and unresolved cases.
+
+## Selected expansion candidate, 2026-11-17
+
+[Hard Hat Workers v10 raw_AllClasses](https://universe.roboflow.com/joseph-nelson/hard-hat-workers/dataset/10)
+is preferable for review to the3x augmented exports when seeking more distinct
+source images. Its catalog reports7035 images (4916train,1413validation,706test),
+auto-orient only, no augmentation, and Public Domain. These are **catalog claims**;
+no corresponding archive has been downloaded, hashed or validated here. The
+original source linked by Roboflow and the export README/license must agree
+before a commercial build. Do not count augmentation copies as independent data.
+
+Obtain the version10 YOLO export through Roboflow. After explicitly accepting
+its actual license, import the local archive using the existing command:
+
+```powershell
+siteguard dataset download --name hard-hat-workers --archive data/incoming/hard-hat-workers-v10.zip --version 10 --license-id Public-Domain --accept-license
+```
+
+Authentication or manual export is an external prerequisite; no API key is
+configured locally. Do not put keys in source files or chat. The source remains
+disabled in the training configuration. Proposed head/person mappings remain
+unset until labeled samples are reviewed. In particular, assess **full-body
+annotation completeness**: adding head-only images to a joint12-class detector
+as though missing body labels were negatives could harm worker recall. Do not
+merge ambiguous person/head annotations by spelling alone. Keep all original
+Construction-PPE classes and labels unchanged, frozen development validation,
+cross-source pHash/leakage review and source-group reporting. Public partitions
+without source provenance do not establish an independent CCTV test.
+
+The Pexels construction video selected for a demo is excluded from training.
+Its [Pexels License](https://www.pexels.com/license/) permits free use/modification
+with conditions; it is not CC0. The download helper records provenance and waits
+for content review; it does not create ground truth or claim the clip is CCTV.
