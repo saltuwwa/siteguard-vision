@@ -5,6 +5,8 @@ import hashlib
 import json
 import platform
 import time
+import csv
+import shutil
 from pathlib import Path
 from typing import Any, Literal
 
@@ -110,6 +112,52 @@ def validate_source_data(data_path: Path, report_path: Path, smoke_only: bool) -
     return report
 
 
+def prepare_resume(cfg: TrainConfig, report: dict[str, Any], checkpoint: dict[str, Any],
+                   experiment_dir: Path) -> dict[str, Any]:
+    """Recover history from the loaded checkpoint, never a possibly torn CSV tail."""
+    assert cfg.resume is not None
+    source_dir = cfg.resume.resolve().parent.parent
+    if experiment_dir.resolve() == source_dir:
+        raise ValueError("Resume requires a new run directory to preserve source artifacts")
+    source_metadata = json.loads((source_dir/"experiment.json").read_text())
+    if source_metadata["evaluation_fingerprint"] != report["evaluation_fingerprint"]:
+        raise ValueError("Resume dataset content fingerprint differs")
+    for key in ("epochs", "batch", "imgsz", "workers", "seed", "amp", "augmentation", "patience"):
+        if source_metadata["config"][key] != cfg.model_dump(mode="json")[key]:
+            raise ValueError(f"Resume recipe differs: {key}")
+    epoch = int(checkpoint.get("epoch", -1))
+    if epoch < 0 or epoch+1 >= cfg.epochs or checkpoint.get("optimizer") is None:
+        raise ValueError("Resume needs an unfinished checkpoint with optimizer state")
+    history = checkpoint.get("train_results")
+    if not history or history.get("epoch", [])[-1:] != [epoch+1]:
+        raise ValueError("Checkpoint metrics history does not match the saved epoch")
+    rows = list(zip(*history.values(), strict=True))
+    with (experiment_dir/"results.csv").open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(history)
+        writer.writerows(rows)
+    class_history_status = "recovered"
+    try:
+        prior_epochs = json.loads((source_dir/"per-class-epochs.json").read_text())
+    except (OSError, ValueError) as exc:
+        prior_epochs = []
+        class_history_status = f"unavailable: {type(exc).__name__}; no metrics fabricated"
+    retained = [r for r in prior_epochs if r["epoch"] <= epoch+1]
+    write_json(experiment_dir/"per-class-epochs.json", retained)
+    # The selected source best must survive even if no resumed epoch improves it.
+    source_best = source_dir/"weights/best.pt"
+    (experiment_dir/"weights").mkdir()
+    shutil.copyfile(source_best, experiment_dir/"weights/best.pt")
+    return {"checkpoint_sha256": sha256(cfg.resume), "source_best_sha256": sha256(source_best),
+            "source_experiment": str(source_dir), "restored_epoch": epoch+1,
+            "original_initial_checkpoint_sha256": source_metadata["initial_checkpoint_sha256"],
+            "retained_epoch_time_seconds": float(history["time"][-1]),
+            "prior_per_class_history_status": class_history_status,
+            "prior_per_class_records_recovered": len(retained),
+            "csv_time_scope": "native elapsed time resets in the resumed process",
+            "confounders": ["training interruption", "GPU changed", "RNG stream restarted on resume"]}
+
+
 def run_training(config_path: Path) -> Path:
     cfg = load_config(config_path, TrainConfig)
     if cfg.stage == "smoke" and cfg.epochs != 1:
@@ -148,8 +196,8 @@ def run_training(config_path: Path) -> Path:
                "sync": False, "hub": False, "clearml": False, "comet": False, "neptune": False}
     settings.update({k: v for k, v in options.items() if k in settings})
     experiment_dir = cfg.project / cfg.name
-    if experiment_dir.exists() and not cfg.resume:
-        raise ValueError("Experiment exists; choose a new run name or --resume checkpoint via config")
+    if experiment_dir.exists():
+        raise ValueError("Experiment exists; choose a new run name, including for checkpoint resume")
     checkpoint = cfg.resume or cfg.model
     if cfg.resume and not cfg.resume.is_file():
         raise FileNotFoundError("Resume checkpoint missing")
@@ -165,9 +213,12 @@ def run_training(config_path: Path) -> Path:
         "class_names": class_names(yaml.safe_load(cfg.data.read_text())),
         "dataset_independence_proven": report["independence_proven"],
         "review_scope": report["sources"][0].get("review", {})}
+    if cfg.resume:
+        metadata["resume_lineage"] = prepare_resume(cfg, report, model.ckpt, experiment_dir)
     write_json(experiment_dir/"experiment.json", metadata)
     import torch
-    epoch_records: list[dict[str, Any]] = []
+    epoch_records: list[dict[str, Any]] = (json.loads((experiment_dir/"per-class-epochs.json").read_text())
+        if cfg.resume else [])
     started = time.perf_counter()
     if device != "cpu":
         torch.cuda.reset_peak_memory_stats(int(device))
@@ -204,7 +255,9 @@ def run_training(config_path: Path) -> Path:
             "plots": True, **cfg.augmentation}
         if cfg.resume:
             # Ultralytics restores the checkpoint's training arguments on resume.
-            model.train(resume=str(cfg.resume), device=device)
+            # Its explicit save_dir override is essential: project/name are
+            # otherwise restored to the original run and overwrite old artifacts.
+            model.train(resume=str(cfg.resume), device=device, save_dir=str(experiment_dir.resolve()))
         else:
             model.train(**arguments)
         save_dir = Path(model.trainer.save_dir)
@@ -212,7 +265,6 @@ def run_training(config_path: Path) -> Path:
         metadata["weights"] = {name: {"path": str(save_dir/"weights"/f"{name}.pt"),
             "sha256": sha256(save_dir/"weights"/f"{name}.pt")} for name in ("best", "last")}
         metadata["results_csv"] = str(save_dir/"results.csv")
-        import csv
         with (save_dir/"results.csv").open(encoding="utf-8", newline="") as metrics_stream:
             metadata["epoch_metrics"] = [{k.strip(): float(v) for k, v in row.items()}
                 for row in csv.DictReader(metrics_stream)]

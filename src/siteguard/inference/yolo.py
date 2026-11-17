@@ -1,6 +1,7 @@
 import hashlib
 import os
 import math
+import time
 from pathlib import Path
 
 from siteguard.config.settings import RuntimeConfig
@@ -11,6 +12,7 @@ from siteguard.inference.runtime import require_ultralytics
 
 class YoloDetector:
     def __init__(self, config: RuntimeConfig) -> None:
+        initialized_at = time.perf_counter()
         os.environ["YOLO_AUTOINSTALL"] = "false"
         installed = require_ultralytics()
         from ultralytics import YOLO
@@ -41,6 +43,7 @@ class YoloDetector:
         self.precision_args = ({"quantize": 16 if self.half else 32}
                                if "quantize" in DEFAULT_CFG_DICT else {"half": self.half})
         self.version = f"ultralytics-{installed}:sha256:{digest}"
+        self.initialization_seconds = time.perf_counter()-initialized_at
 
     def detect(self, image: ImageArray) -> list[Detection]:
         # A previous success must not mask a later predictor/device failure.

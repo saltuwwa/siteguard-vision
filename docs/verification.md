@@ -6,6 +6,51 @@ conservative association corrections and distinct detection/track/event annotati
 See [technical audit](reports/pipeline-audit.md) and [machine-readable runtime report](reports/p1-runtime-20261116.json).
 No frontend source or endpoint schema was changed.
 
+## 2026-11-17: host-restart blocker; GPU work stopped
+
+The user reported spontaneous whole-computer reboots under GPU load, also seen with
+a diffusion workload. Kernel uptime observed at 08:29 UTC indicated boot around
+08:21 UTC (13:21 local). The CUDA:0 training process was already absent. No new GPU
+training or stress workload will run automatically while the cause is unresolved.
+
+The prior CUDA:1 run stopped during epoch 30 validation. Its last.pt and historical
+per-class JSON were corrupt; best.pt at epoch 24 retained optimizer/EMA/history.
+A new directory resumed that checkpoint on CUDA:0. The second restart interrupted
+this continuation after 32 completed epochs. Best (epoch31) and last (epoch32) both
+load on CPU with optimizer state, and additional local copies were flushed into
+ignored safety-checkpoints. The old artifacts were preserved. Missing historical
+per-class metrics were not fabricated. There is no completed 960 baseline or final
+960-versus-640 improvement claim. Interruption, GPU change and restarted RNG stream
+are explicit experimental confounders.
+
+Resume now explicitly overrides save_dir: Ultralytics otherwise restores the old
+output directory and can ignore a new project/name. Tests verify preserved sources,
+recipe/data binding and history recovery from the checkpoint rather than a torn CSV.
+Native CSV elapsed time resets in the resumed process; segment durations must not be
+read as one uninterrupted clock. Project JSON already used atomic rename; it now
+fsyncs the temporary file first and uses a distinct temporary name. This strengthens
+metadata durability but does not prove the cause of prior corruption or guarantee
+power-loss survival. Native vendor checkpoint writes remain an interrupted-write risk.
+Three NUL-corrupted documentation files were restored from verified GitHub commit
+f49c0d928877e627c3e0f9d443aaa21ac979a307; damaged copies were preserved locally.
+The source/configuration scan found no NUL-corrupted Python or YAML files.
+
+Read-only nvidia-smi maps GPU0 to PCI02:00.0 and GPU1 to PCI83:00.0. Idle readings
+cannot identify a faulty GPU. Windows System event/CIM access is denied in this
+execution environment. Run the read-only collector from a user PowerShell session
+with event-log access; it does not run a stress test or change settings:
+
+```powershell
+.\scripts\collect_reboot_diagnostics.ps1
+```
+
+Reports remain in ignored runs/. Correlate Kernel-Power41, BugcheckCode,1001,WHEA and
+nearby driver events; Event41 alone does not establish the cause, as explained by
+[Microsoft](https://learn.microsoft.com/en-us/troubleshoot/windows-client/performance/event-id-41-restart).
+The earlier pytest FD-capture issue is separate from a whole-system reboot.
+Post-reboot CPU-only regression tests: **72 passed,3 skipped,exit0**, with
+CUDA_VISIBLE_DEVICES=-1. GPU work remains deferred; no automatic retry is scheduled.
+
 ## P1 measured findings
 
 At fixed genuine 640px validation predictions and decoder width1280, association accepted

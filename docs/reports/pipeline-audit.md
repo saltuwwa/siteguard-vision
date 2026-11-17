@@ -154,3 +154,13 @@ to 640px. The original best/last checkpoints must remain byte-identical.
   Event snapshots still commit per supporting frame; optimize only if measurements
   show persistence is a bottleneck. Detector batching adds queue latency and is
   deferred until a throughput bottleneck is demonstrated.
+
+
+## Host restart discovered 2026-11-17
+
+Both training phases were interrupted by the confirmed host-restart problem. GPU
+work is stopped rather than automatically retried. The latest valid optimizer
+checkpoints are best(epoch31) and last(epoch32); the 960 experiment is incomplete.
+Original files and the recovered 640 baseline remain protected. See verification
+for checkpoint hashes, missing metrics, recovery tests and the read-only event
+collector. No particular GPU, driver or PSU has been identified as the cause.

@@ -40,6 +40,7 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                 "model_version": detector.version,
                 "effective_device": getattr(detector, "device", "injected-test-detector"),
                 "effective_half": getattr(detector, "half", None),
+                "detector_initialization_seconds": getattr(detector, "initialization_seconds", None),
                 "configuration": config.model_dump(mode="json", exclude={"database_url"})}
     write_json(output/"run.json", metadata)
     reader = VideoReader(source, camera_id, config, live)
@@ -230,6 +231,7 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
             gpu = gpu_memory_snapshot(str(getattr(detector, "device", "cpu")))
             duration = time.monotonic()-started
             latency_report = latency.report()
+            initialization = getattr(detector, "initialization_seconds", None)
             summary = {"processed_frames": count, "elapsed_seconds": duration,
                 "processed_fps": count/duration if duration else 0,
                 "ingestion": asdict(reader.metrics), "model_version": detector.version,
@@ -248,9 +250,12 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                     "decoder_thread": reader.performance.report() if hasattr(reader, "performance") else {},
                     "video_output": video.performance.report() if hasattr(video, "performance") else {},
                     "event_io_thread": sink.performance.report(), "gpu_memory": gpu,
+                    "detector_initialization_seconds": initialization,
+                    "fps_including_detector_initialization": count/(duration+initialization)
+                        if initialization is not None and duration+initialization > 0 else None,
                     "sampling_target_fps": config.inference_fps,
                     "meets_sampling_target": count/duration >= config.inference_fps if duration and count else None,
-                    "scope": "includes cold inference; concurrent thread totals overlap"}}
+                    "scope": "processing FPS includes cold inference and I/O drain, excludes prior detector construction; concurrent totals overlap"}}
             report = diagnostics.report()
             report["temporal_reasons"] = dict(temporal_reasons)
             report["event_end_reasons"] = dict(event_end_reasons)

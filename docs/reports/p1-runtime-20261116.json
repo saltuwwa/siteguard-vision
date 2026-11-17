@@ -430,9 +430,38 @@
     "note": "Full training adds optimizer state; retain headroom. Baseline weights unchanged."
   },
   "960_training": {
-    "status": "running",
-    "run": "construction-ppe-12class-960-20261116",
-    "config": "configs/train-960.yaml"
+    "status": "incomplete: confirmed host reboot; GPU work stopped",
+    "first_segment": {
+      "gpu": 1,
+      "last_completed_csv_epoch": 29,
+      "last_checkpoint": "corrupt",
+      "best_recovered_epoch": 24,
+      "historical_per_class_json": "corrupt; not fabricated"
+    },
+    "gpu0_continuation": {
+      "resumed_epoch": 24,
+      "last_completed_epoch": 32,
+      "best_checkpoint_epoch": 31,
+      "checkpoints": [
+        {
+          "name": "best",
+          "sha256": "ace57185e26690f83929c47561dbf3f56bbf4048d613cff6e1daa652463b954f",
+          "completed_epoch": 31,
+          "optimizer_saved": true,
+          "status": "loadable on CPU"
+        },
+        {
+          "name": "last",
+          "sha256": "a7004a4e6bfd4ee4f2f5ab12d47cde00a9cdaa367ad7462a9a515c6af05556ce",
+          "completed_epoch": 32,
+          "optimizer_saved": true,
+          "status": "loadable on CPU"
+        }
+      ]
+    },
+    "restart_utc": "2026-11-17T08:21:19+00:00",
+    "final960comparison": "not completed; no final improvement claim",
+    "hardware_cause": "unknown; Windows event/CIM access denied"
   },
   "notes": [
     "FP16 was slower than FP32 on this short scene; default stays FP32.",
@@ -686,5 +715,16 @@
     "checkpoint_unchanged": true,
     "validation_content_sha256": "8a81b773155277c56983945a04f47ea266b0e28f9c87256c58ddfea840cca3b5",
     "output": "runs/p1-20261116/eval640"
+  },
+  "post_reboot_cpu_tests": {
+    "passed": 72,
+    "skipped": 3,
+    "exit_code": 0,
+    "cuda_visible_devices": "-1"
+  },
+  "workspace_recovery": {
+    "nul_corrupted_documents": 3,
+    "restored_from_verified_github_commit": "f49c0d928877e627c3e0f9d443aaa21ac979a307",
+    "source_code_scan": "no NUL corruption detected in Python, tests or configuration"
   }
 }
