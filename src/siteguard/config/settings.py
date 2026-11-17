@@ -18,6 +18,8 @@ class RulesConfig(StrictModel):
     clear_seconds: float = Field(default=1.0, gt=0)
     cooldown_seconds: float = Field(default=5.0, ge=0)
     min_confidence: float = Field(default=0.6, ge=0, le=1)
+    # None preserves the historical shared head/person threshold.
+    min_person_confidence: float | None = Field(default=None, ge=0, le=1)
     min_head_pixels: int = Field(default=12, ge=1)
 
     @model_validator(mode="after")

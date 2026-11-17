@@ -125,7 +125,8 @@ def analyze(source: str, output: Path, camera_id: str, config: RuntimeConfig,
                 with performance.measure("head_association"):
                     evidence = associate_heads(people, detections, config.rules.min_confidence,
                         config.rules.min_head_pixels, image_shape=frame.image.shape[:2],
-                        diagnostics=association)
+                        diagnostics=association,
+                        min_person_confidence=config.rules.min_person_confidence)
                 diagnostics.counts["active_person_track_observations"] += len(people)
                 diagnostics.counts["head_association_attempts"] += association.attempts
                 diagnostics.counts["accepted_head_associations"] += association.accepted

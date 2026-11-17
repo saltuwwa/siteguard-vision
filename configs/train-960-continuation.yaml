@@ -1,0 +1,22 @@
+# Five-epoch continuation of a trusted local checkpoint; preserve the80-epoch LR horizon.
+# Choose a new run name before repeating; raw weights and local data YAML are ignored.
+stage: A
+model: yolo26s.pt
+data: data/local/construction-ppe.source.yaml
+data_schema: source
+validation_report: runs/dataset-local/report.json
+project: runs/train
+name: construction-ppe-960-gpu0-segment-20261117-102614
+epochs: 80
+batch: 2
+imgsz: 960
+device: '0'
+workers: 0
+seed: 42
+amp: false
+deterministic: true
+patience: 15
+tensorboard: false
+resume: runs/train/construction-ppe-12class-960-20261117-gpu0/weights/last.pt
+allow_resume_batch_change: true
+max_additional_epochs: 5

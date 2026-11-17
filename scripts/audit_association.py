@@ -20,11 +20,17 @@ def main() -> None:
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--head-confidence", type=float, default=.6)
+    parser.add_argument("--person-confidence", type=float, default=None)
     args = parser.parse_args()
     data = yaml.safe_load(args.data.read_text())
     names, root = class_names(data), Path(data["path"])
     report = {"scope": "fixed saved genuine detector predictions; per-image person candidates, NOT tracking/association accuracy",
-              "detector_threshold": .15, "head_and_person_confidence": .6,
+              "detector_threshold": .15, "head_confidence": args.head_confidence,
+              "head_and_person_confidence": (args.head_confidence if args.person_confidence in
+                                              (None, args.head_confidence) else None),
+              "person_confidence": (args.head_confidence if args.person_confidence is None
+                                    else args.person_confidence),
               "minimum_head_size_basis": "12 pixels in decoded image, NOT model input pixels",
               "counterfactual_limit": "coordinate rescaling only; does not rerun detector after video resize",
               "runs": []}
@@ -49,7 +55,9 @@ def main() -> None:
                     detections.append(Detection(((x-bw/2)*w, (y-bh/2)*h,
                         (x+bw/2)*w, (y+bh/2)*h), conf, name))
             people = [PersonTrack(i+1, d.box, d.confidence) for i, d in enumerate(detections) if d.label == "person"]
-            evidence = associate_heads(people, detections, image_shape=(h, w), diagnostics=audit)
+            evidence = associate_heads(people, detections, min_confidence=args.head_confidence,
+                image_shape=(h, w), diagnostics=audit,
+                min_person_confidence=args.person_confidence)
             bareheads = [d for d in detections if d.label == "barehead"]
             truths = [list(map(float, line.split())) for line in
                       (root/"labels/val"/f"{path.stem}.txt").read_text().splitlines() if line.strip()]
@@ -73,7 +81,7 @@ def main() -> None:
                     bare_quality[prefix+"_accepted_to_some_person"] += 1
                 else:
                     bare_quality[prefix+"_not_accepted"] += 1
-                if head.confidence < .6:
+                if head.confidence < args.head_confidence:
                     bare_quality[prefix+"_below_association_confidence"] += 1
                 elif min(head.box[2]-head.box[0], head.box[3]-head.box[1]) < 12:
                     bare_quality[prefix+"_below_size_after_confidence"] += 1

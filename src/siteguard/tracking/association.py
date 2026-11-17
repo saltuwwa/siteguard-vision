@@ -58,7 +58,12 @@ def associate_heads(people: list[PersonTrack], detections: list[Detection],
                     min_confidence: float = 0.6, min_pixels: int = 12,
                     ambiguity_margin: float = 0.12,
                     image_shape: tuple[int, int] | None = None,
-                    diagnostics: AssociationDiagnostics | None = None) -> dict[int, HeadEvidence]:
+                    diagnostics: AssociationDiagnostics | None = None, *,
+                    min_person_confidence: float | None = None) -> dict[int, HeadEvidence]:
+    person_threshold = min_confidence if min_person_confidence is None else min_person_confidence
+    if any(not math.isfinite(value) or not 0 <= value <= 1
+           for value in (min_confidence, person_threshold)):
+        raise ValueError("Association confidence thresholds must be finite and within[0,1]")
     audit = diagnostics if diagnostics is not None else AssociationDiagnostics()
     result = {p.track_id: HeadEvidence(p.track_id) for p in people}
     assigned: dict[int, list[Detection]] = {}
@@ -84,7 +89,7 @@ def associate_heads(people: list[PersonTrack], detections: list[Detection],
         low_person_candidate = False
         for person in people:
             score = candidate_score(person.box, head.box)
-            if not math.isfinite(person.confidence) or person.confidence < min_confidence:
+            if not math.isfinite(person.confidence) or person.confidence < person_threshold:
                 low_person_candidate |= score is not None
                 continue
             if score is not None:

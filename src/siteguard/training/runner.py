@@ -7,11 +7,13 @@ import platform
 import time
 import csv
 import shutil
+import os
+from uuid import uuid4
 from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from siteguard.config.settings import StrictModel, load_config
 from siteguard.inference.device import doctor, select_device
@@ -37,11 +39,33 @@ class TrainConfig(StrictModel):
     deterministic: bool = True
     patience: int = Field(30, ge=0)
     resume: Path | None = None
+    allow_resume_batch_change: bool = False
+    max_additional_epochs: int | None = Field(default=None, ge=1)
     tensorboard: bool = False
     reference_experiment: Path | None = None
     augmentation: dict[str, float] = Field(default_factory=lambda: {
         "hsv_h": .015, "hsv_s": .7, "hsv_v": .4, "degrees": 0., "translate": .1,
         "scale": .5, "fliplr": .5, "flipud": 0., "mosaic": 1., "mixup": 0.})
+
+    @model_validator(mode="after")
+    def continuation_options_require_resume(self) -> "TrainConfig":
+        if (self.allow_resume_batch_change or self.max_additional_epochs is not None) and self.resume is None:
+            raise ValueError("Continuation options require an explicit resume checkpoint")
+        return self
+
+
+def copy_resume_checkpoint(source: Path, destination: Path) -> str:
+    """Retain native optimizer state before Ultralytics strips best/last at exit."""
+    temporary = destination.with_name(f".{destination.name}.{uuid4().hex}.tmp")
+    try:
+        shutil.copyfile(source, temporary)
+        with temporary.open("r+b") as stream:
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.replace(destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return sha256(destination)
 
 
 def validate_built_data(data_path: Path, split: str = "val") -> dict[str, Any]:
@@ -122,8 +146,14 @@ def prepare_resume(cfg: TrainConfig, report: dict[str, Any], checkpoint: dict[st
     source_metadata = json.loads((source_dir/"experiment.json").read_text())
     if source_metadata["evaluation_fingerprint"] != report["evaluation_fingerprint"]:
         raise ValueError("Resume dataset content fingerprint differs")
+    batch_change = None
+    previous_batch = checkpoint.get("train_args", {}).get("batch", source_metadata["config"]["batch"])
     for key in ("epochs", "batch", "imgsz", "workers", "seed", "amp", "augmentation", "patience"):
-        if source_metadata["config"][key] != cfg.model_dump(mode="json")[key]:
+        previous = previous_batch if key == "batch" else source_metadata["config"][key]
+        if previous != cfg.model_dump(mode="json")[key]:
+            if key == "batch" and cfg.allow_resume_batch_change:
+                batch_change = {"original": previous, "resumed": cfg.batch}
+                continue
             raise ValueError(f"Resume recipe differs: {key}")
     epoch = int(checkpoint.get("epoch", -1))
     if epoch < 0 or epoch+1 >= cfg.epochs or checkpoint.get("optimizer") is None:
@@ -150,12 +180,16 @@ def prepare_resume(cfg: TrainConfig, report: dict[str, Any], checkpoint: dict[st
     shutil.copyfile(source_best, experiment_dir/"weights/best.pt")
     return {"checkpoint_sha256": sha256(cfg.resume), "source_best_sha256": sha256(source_best),
             "source_experiment": str(source_dir), "restored_epoch": epoch+1,
-            "original_initial_checkpoint_sha256": source_metadata["initial_checkpoint_sha256"],
+            "original_initial_checkpoint_sha256": source_metadata.get("resume_lineage", {}).get(
+                "original_initial_checkpoint_sha256", source_metadata["initial_checkpoint_sha256"]),
             "retained_epoch_time_seconds": float(history["time"][-1]),
             "prior_per_class_history_status": class_history_status,
             "prior_per_class_records_recovered": len(retained),
+            "batch_change": batch_change,
             "csv_time_scope": "native elapsed time resets in the resumed process",
-            "confounders": ["training interruption", "GPU changed", "RNG stream restarted on resume"]}
+            "confounders": ["training interruption", "RNG stream restarted on resume"] +
+                (["device selection changed"] if source_metadata["config"]["device"] != cfg.device else []) +
+                (["micro-batch changed; batch normalization and stochastic grouping differ"] if batch_change else [])}
 
 
 def run_training(config_path: Path) -> Path:
@@ -245,6 +279,23 @@ def run_training(config_path: Path) -> Path:
             return
         epoch_records.append(row)
         write_json(experiment_dir/"per-class-epochs.json", epoch_records)
+        if cfg.max_additional_epochs is not None:
+            completed = int(trainer.epoch)+1 - metadata["resume_lineage"]["restored_epoch"]
+            segment_limit = completed >= cfg.max_additional_epochs
+            if segment_limit:
+                trainer.stop = True
+                metadata["segment_limit_reached"] = True
+            if trainer.stop or int(trainer.epoch)+1 >= cfg.epochs:
+                # Native final_eval strips optimizer state. Keep flushed copies
+                # before it runs, without changing the original LR horizon.
+                snapshots = {}
+                for label in ("last", "best"):
+                    source = Path(getattr(trainer, label))
+                    destination = source.with_name(f"resumable-{label}.pt")
+                    snapshots[label] = {"path": str(destination),
+                        "sha256": copy_resume_checkpoint(source, destination)}
+                metadata["resumable_weights"] = snapshots
+                write_json(experiment_dir/"experiment.json", metadata)
 
     model.add_callback("on_fit_epoch_end", record_epoch)
     try:
@@ -257,7 +308,8 @@ def run_training(config_path: Path) -> Path:
             # Ultralytics restores the checkpoint's training arguments on resume.
             # Its explicit save_dir override is essential: project/name are
             # otherwise restored to the original run and overwrite old artifacts.
-            model.train(resume=str(cfg.resume), device=device, save_dir=str(experiment_dir.resolve()))
+            model.train(resume=str(cfg.resume), device=device, batch=cfg.batch, workers=cfg.workers,
+                        save_dir=str(experiment_dir.resolve()))
         else:
             model.train(**arguments)
         save_dir = Path(model.trainer.save_dir)
@@ -270,8 +322,12 @@ def run_training(config_path: Path) -> Path:
                 for row in csv.DictReader(metrics_stream)]
         metadata["actual_training_device"] = str(model.trainer.device)
         metadata["epochs_completed"] = int(model.trainer.epoch)+1
-        metadata["stop_reason"] = "early_stopping" if metadata["epochs_completed"] < cfg.epochs else "epoch_limit"
-        metadata["status"] = "completed"
+        if cfg.resume:
+            metadata["additional_epochs_completed"] = metadata["epochs_completed"] - metadata["resume_lineage"]["restored_epoch"]
+        segment_limited = bool(metadata.get("segment_limit_reached")) and metadata["epochs_completed"] < cfg.epochs
+        metadata["stop_reason"] = ("segment_epoch_limit" if segment_limited else
+            "early_stopping" if metadata["epochs_completed"] < cfg.epochs else "epoch_limit")
+        metadata["status"] = "segment_completed" if segment_limited else "completed"
     except BaseException as exc:
         metadata["status"] = "failed"
         metadata["error_type"] = type(exc).__name__

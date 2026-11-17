@@ -37,13 +37,18 @@ def head_size_recall(analysis: Path, data_path: Path) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--smoke", type=Path, required=True)
-    parser.add_argument("--baseline", type=Path, required=True)
+    # Historical aliases stay compatible with the original smoke/baseline runs.
+    parser.add_argument("--reference", "--smoke", dest="smoke", type=Path, required=True)
+    parser.add_argument("--candidate", "--baseline", dest="baseline", type=Path, required=True)
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--allow-resolution-change", action="store_true")
+    parser.add_argument("--require-same-checkpoint", action="store_true",
+                        help="For inference ablations, reject different model weights")
     args = parser.parse_args()
     a, b = [json.loads((p/"metrics.json").read_text()) for p in (args.smoke, args.baseline)]
+    if args.require_same_checkpoint and a["checkpoint_sha256"] != b["checkpoint_sha256"]:
+        raise ValueError("Inference ablation requires identical checkpoint hashes")
     content_a, content_b = a.get("validation_content_sha256"), b.get("validation_content_sha256")
     if content_a or content_b or args.allow_resolution_change:
         if not content_a or content_a != content_b or content_a != validation_content_fingerprint(args.data):
@@ -57,12 +62,16 @@ def main() -> None:
             right = {k: v for k, v in right.items() if k != "imgsz"}
         if left != right:
             raise ValueError(f"Evaluation settings differ: {key}")
-    if a["protocol"]["imgsz"] != 640:
-        raise ValueError("Size diagnostic is defined for the fixed 640 baseline protocol")
+    # head_size_recall projects SOURCE boxes to640 independently of the model's
+    # inference size. A960->1280 comparison uses the same source bins as640->960.
     comparison = {"scope": "same official development validation; not independent test",
         "reference_protocol": a["protocol"], "candidate_protocol": b["protocol"],
         "size_bin_basis": "same source boxes projected to long-side640 for both models",
         "validation_content_sha256": content_a,
+        "same_checkpoint": a["checkpoint_sha256"] == b["checkpoint_sha256"],
+        "interpretation": ("same-checkpoint inference resolution ablation" if
+            a["checkpoint_sha256"] == b["checkpoint_sha256"] else
+            "different checkpoints; training confounders require separate disclosure"),
         "content_integrity": "verified" if content_a else "not recorded in legacy evaluations",
         "protocol": b["protocol"], "smoke_checkpoint_sha256": a["checkpoint_sha256"],
         "baseline_checkpoint_sha256": b["checkpoint_sha256"],
