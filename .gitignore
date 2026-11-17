@@ -13,6 +13,23 @@ node_modules/
 data/
 construction-ppe/
 configs/*.local.yaml
+configs/*.local.yml
+configs/*.local.json
+# Private application state and credentials, including future local camera tools.
+**/.camera.local.json
+**/.camera-cache/
+.aws/
+.codex/
+# Crash dumps, native tracing, symbols and keys stay local even outside runs/.
+*.dmp
+*.evtx
+*.etl
+*.pdb
+*.log
+*.pem
+*.key
+*.pfx
+*.p12
 *.zip
 runs/
 models/
@@ -21,6 +38,10 @@ models/
 *.engine
 *.mp4
 *.avi
+*.mov
+*.mkv
+*.webm
+*.m4v
 *.sqlite*
 *.db
 *.egg-info/

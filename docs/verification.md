@@ -25,9 +25,8 @@ optimizer, changed batch8 to2 and did not improve the established baseline. It
 is **not promoted**. Original640 and960 epoch31 hashes remain unchanged. No
 extra dataset was silently added and no long training run was started.
 
-During the attempt, PnP reported the83:00.0 card as **Disabled**, while02:00.0
-remained Started. The agent made no device changes. Whether the user or another
-process changed this is unconfirmed. No reboot was observed during this bounded
+During the attempt, the visible GPU configuration changed. The agent made no
+device changes; the source of this external change is unconfirmed. No reboot was observed during this bounded
 attempt, but it cannot prove long-run GPU0 stability or diagnose either card.
 
 Fresh paired validation used batch2/FP32/device0/workers0/conf0.001/IoU0.7,
@@ -146,126 +145,21 @@ Three NUL-corrupted documentation files were restored from verified GitHub commi
 f49c0d928877e627c3e0f9d443aaa21ac979a307; damaged copies were preserved locally.
 The source/configuration scan found no NUL-corrupted Python or YAML files.
 
-Read-only nvidia-smi maps GPU0 to PCI02:00.0 and GPU1 to PCI83:00.0. Idle readings
-cannot identify a faulty GPU. Windows System event/CIM access is denied in this
-execution environment. Run the read-only collector from a user PowerShell session
-with event-log access; it does not run a stress test or change settings:
+### Private host diagnostics: public summary
 
-```powershell
-.\scripts\collect_reboot_diagnostics.ps1
-```
+Read-only local Windows diagnostics confirmed a double-fault bugcheck and a
+repeating NVIDIA kernel-driver call chain. Corrected PCIe errors were also
+observed. These findings do not identify a defective graphics card or establish
+the root cause. Missing public kernel symbols limit the crash interpretation.
+No driver, BIOS or power-limit changes were performed by this agent.
 
-Reports remain in ignored runs/. Correlate Kernel-Power41, BugcheckCode,1001,WHEA and
-nearby driver events; Event41 alone does not establish the cause, as explained by
-[Microsoft](https://learn.microsoft.com/en-us/troubleshoot/windows-client/performance/event-id-41-restart).
-The earlier pytest FD-capture issue is separate from a whole-system reboot.
-Post-reboot CPU-only regression tests: **72 passed,3 skipped,exit0**, with
-CUDA_VISIBLE_DEVICES=-1. GPU work remains deferred; no automatic retry is scheduled.
-
-### User-collected Windows events: PCIe branch identified, cause unresolved
-
-The externally collected report `runs/reboot-diagnostics-20261117-134944/` contains
-120 WHEA-Logger 17 corrected PCIe errors over 2.72 seconds, 08:26:48.906 through
-08:26:51.626 UTC. These warnings occurred after the observed 08:21 UTC restart.
-All sampled records name root port 80:1c.4 (VEN_8086, DEV_7F3C). Read-only
-`pnputil /enum-devices` parent/child relations connect that port directly to the
-RTX 5090 at 83:00.0, **GPU1 in nvidia-smi numbering**. GPU0 at 02:00.0 has a
-different parent. Windows Task Manager numbering has not been correlated.
-
-This identifies the reporting PCIe branch, not a defective graphics card or the
-cause of the restart. Card, slot/riser, motherboard, firmware and power remain
-unresolved possibilities. Corrected errors alone do not establish a fatal error;
-see [Microsoft WHEA error definitions](https://learn.microsoft.com/en-us/windows-hardware/drivers/whea/hardware-errors-and-error-sources).
-GPU1 negotiated x4 while GPU0 negotiated x16 at the idle query; slot wiring and
-idle link power management must be considered before interpreting link readings.
-There is no basis to declare GPU0 safe: the second training interruption occurred
-while using CUDA:0.
-
-The first collector's shared 120-event cap was entirely consumed by corrected
-warnings, leaving restart/bugcheck records unsampled. The updated read-only
-collector exports critical events, important WHEA errors and a bounded corrected
-error sample separately, plus display-device topology. Repeat the same command
-above to obtain the missing restart evidence. No GPU workload, device disable,
-driver change, BIOS change or power-limit change was performed. Script syntax
-was checked with the PowerShell parser; actual event collection still requires
-the external user PowerShell session. Raw event logs and topology remain ignored.
-
-### Second event export: a Windows bugcheck is confirmed
-
-The user reran the collector at 14:13 local time. The new ignored report
-`runs/reboot-diagnostics-20261117-141309/` contains four critical records:
-WER-SystemErrorReporting1001, Kernel-Power41, EventLog6005 and6008. Event1001,
-recorded at08:21:45.135 UTC after boot, reports `0x0000007f` with parameter1=`8`
-and a saved minidump. Event41 records decimal268435583 (`0x1000007f`) with the
-same four parameters. Microsoft documents that
-[0x1000007F has the same meaning and parameters as0x7F](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/bug-check-0x1000007f--unexpected-kernel-mode-trap-m).
-Parameter8 is a double fault; documented possibilities include a kernel stack
-overflow and hardware problems. The
-[Microsoft debugging procedure](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/bug-check-0x7f--unexpected-kernel-mode-trap)
-starts with `!analyze -v` and stack inspection. The stop code alone does not
-identify NVIDIA, a particular GPU, RAM, CPU, PSU or a driver as the cause.
-
-No WHEA18/19/20/46/47 matched this query of the surviving System log. That is
-not proof that no such error ever occurred. The bounded corrected-error sample
-still contains30 WHEA17 records on the same80:1c.4 branch, at09:09:10 UTC,
-after reboot. These warnings and the bugcheck must not be conflated into a
-proven causal chain. Event6008's textual prior-shutdown time also differs from
-observed boot time; postboot record timestamps are not exact crash timestamps.
-
-Initially, reading the reported minidump under Windows/Minidump was denied to
-this execution environment. The user subsequently copied it into the existing
-ignored report directory. No ACL changes or public dump upload were performed.
-
-### Copied minidump: deeply repeating NVIDIA kernel-driver stack
-
-The copied minidump is13,975,231 bytes, SHA256
-`3f207d08a96dac2d6ca69a6fcdcfb936b7a0190d952a83b8ea79c10d82f52454`.
-Windows SDK CDB10.0.26100.3323 opened it successfully. Its recorded crash time is
-**2026-11-17 13:20:52.998 +05:00**, with system uptime18:19:20.813. It confirms
-the double-fault stop code and the parameters from the event export.
-
-Initial analysis lacked the kernel image and PDB symbols. A noisy symbol reload
-recorded `800C2EE7 / ERROR_INTERNET_NAME_NOT_RESOLVED` for Microsoft's symbol
-server. No matching local PDB cache was found. Loading the installed kernel image
-resolved image/unwind information: version10.0.26100.9444, PE reproducible-build
-hash5ADFD5D6 and image size0x1450000 match the dump. That hash is not a2018 build
-date; CDB explicitly identifies `/Brepro`. The installed NVIDIA image likewise
-matches PE hash6A9B4070/image size0x6D3E000. Its file version32.0.16.1692
-corresponds to the observed driver616.92.
-
-With matching local images and the recorded trap frame, `kv 100` unwound134
-frames, **128 inside nvlddmkm.sys**. Repeated NVIDIA offset sequences include
-0x12a0e3,0x12c299,0x2efb06,0xb8fb6a and0x7377f8, each appearing five times.
-This is concrete evidence of a deeply repeating NVIDIA kernel-driver path,
-consistent with kernel stack exhaustion. It does not prove a driver software
-bug rather than hardware-triggered driver behavior, nor identify GPU0 orGPU1.
-The independently observed GPU1-branch PCIe warnings remain separate evidence.
-
-Only export symbols are available. Nearest-export names must not be treated as
-exact private function names. `!analyze -v` still reports WRONG_SYMBOLS because
-kernel PDB types are missing; its placeholder process/bucket are not a valid
-culprit diagnosis. Typed thread stack limits and a full symbolic analysis remain
-unverified. See [Microsoft on missing symbols](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbol-problems-while-debugging).
-
-Actual local commands used the existing ignored report directory:
-
-```powershell
-$report = Join-Path (Get-Location) 'runs/reboot-diagnostics-20261117-141309'
-$driverImage = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\nvlddmkm').ImagePath
-$driverImage = $driverImage.Replace('\SystemRoot', $env:SystemRoot)
-$imageDirs = "$env:SystemRoot\System32;$(Split-Path -Parent $driverImage)"
-& 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe' `
-  -z "$report\crash.dmp" -i $imageDirs -y "$report\symbols" `
-  -logo "$report\cdb-verified-images.log" `
-  -c '.reload /f nt; .reload /f nvlddmkm; .trap ffff820175b75e70; kv 100; lmvm nt; lmvm nvlddmkm; q'
-```
-
-The trap address is specific to this dump. The debugger exited0, which confirms
-command execution, not successful PDB acquisition or a repaired computer.
-Raw logs, dump and structured analysis remain ignored. No training, stress test,
-driver installation or reboot was initiated. Next investigation is the repeating
-NVIDIA driver path with proper symbols and a controlled driver-version check;
-the PCIe branch still requires hardware/slot/power assessment if errors persist.
+The collector now samples critical restart events separately from corrected
+warnings so an error storm cannot exhaust their shared event limit. Script
+syntax was checked. Raw event logs, dumps, identifiers, topology and dump-specific
+debugger commands remain private in ignored runs/; public reports retain only
+project-relevant conclusions. The earlier pytest capture issue is separate from
+whole-host restarts. Post-reboot CPU-only tests passed72 with3skipped,exit0;
+the latest explicitly requested GPU0 retry and its limits are recorded above.
 
 ## P1 measured findings
 

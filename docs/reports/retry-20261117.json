@@ -2,12 +2,12 @@
   "date": "2026-11-17",
   "scope": "development-validation and bounded GPU0 retry; not production or independent video accuracy",
   "hardware": {
-    "device": "physical GPU0 / PCI02:00.0",
+    "device": "CUDA0",
     "gpu": "RTX5090",
     "torch": "2.8.0+cu128",
     "ultralytics": "8.4.213",
     "driver": "616.92",
-    "other_gpu_observed_status": "PCI83:00.0 Disabled; agent made no device changes; external change unconfirmed"
+    "other_gpu_observed_status": "GPU visibility changed externally during the attempt; agent made no device changes"
   },
   "training_retry": {
     "configuration": {
