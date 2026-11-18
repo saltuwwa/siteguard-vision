@@ -1,0 +1,24 @@
+# Focus-selected development candidate. Original models/defaults remain unchanged.
+# Increased helmet false positives require reviewed construction-video validation.
+model: models/ppe-nohelmet-960-epoch36-candidate.pt
+model_sha256: 96562c759e8f694de9e3b9807961ed0aabfc90e6abdd5c06366b1220c20bb4cb
+model_mapping:
+  Person: person
+  helmet: helmet
+  no_helmet: barehead
+device: '0'
+half: false
+confidence: 0.15
+imgsz: 960
+inference_fps: 8
+max_width: 1280
+queue_size: 8
+database_url: sqlite:///runs/siteguard-candidate.sqlite
+kafka_enabled: false
+rules:
+  min_observations: 4
+  min_duration: 1.5
+  window_seconds: 4
+  max_gap: 0.8
+  min_confidence: 0.6
+  min_head_pixels: 12

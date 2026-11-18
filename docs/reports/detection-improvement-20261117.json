@@ -1,0 +1,1431 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-17",
+  "scope": "Development validation only; not independent still/video accuracy or production readiness",
+  "environment": {
+    "device": "CUDA0 / RTX5090",
+    "torch": "2.8.0+cu128",
+    "ultralytics": "8.4.213",
+    "precision": "FP32"
+  },
+  "training": {
+    "status": "segment_completed",
+    "source_epoch": 32,
+    "additional_epochs": 5,
+    "last_epoch": 37,
+    "original_lr_horizon_epochs": 80,
+    "batch_change": {
+      "from": 8,
+      "to": 2
+    },
+    "seed": 42,
+    "seconds_excluding_prior_initialization": 846.9143505000002,
+    "peak_allocated_bytes": 3026822656,
+    "peak_reserved_bytes": 4267704320,
+    "optimizer_restored": true,
+    "resumable_last_epoch": 37,
+    "resumable_native_best_epoch": 31,
+    "confounders": [
+      "training interruption",
+      "RNG restarted",
+      "micro-batch and batch-normalization grouping changed"
+    ],
+    "epoch_metrics": [
+      {
+        "epoch": 33,
+        "overall_map5095": 0.6089965120309014,
+        "focus": [
+          {
+            "class_id": 0,
+            "class": "helmet",
+            "precision": 0.9493432201677345,
+            "recall": 0.8924168776150736,
+            "ap50": 0.9199481533033302,
+            "ap50_95": 0.7565069176068466
+          },
+          {
+            "class_id": 5,
+            "class": "Person",
+            "precision": 0.9561747320183804,
+            "recall": 0.9313929313929314,
+            "ap50": 0.9635824695574763,
+            "ap50_95": 0.8161352924526488
+          },
+          {
+            "class_id": 6,
+            "class": "no_helmet",
+            "precision": 0.8989018196697924,
+            "recall": 0.6954248622928803,
+            "ap50": 0.7864466200257973,
+            "ap50_95": 0.47981529035313775
+          }
+        ]
+      },
+      {
+        "epoch": 34,
+        "overall_map5095": 0.6136472615871241,
+        "focus": [
+          {
+            "class_id": 0,
+            "class": "helmet",
+            "precision": 0.9577139834150996,
+            "recall": 0.8809523809523809,
+            "ap50": 0.9143421543242147,
+            "ap50_95": 0.7481103913758902
+          },
+          {
+            "class_id": 5,
+            "class": "Person",
+            "precision": 0.9623479400530839,
+            "recall": 0.9397089397089398,
+            "ap50": 0.9722422962465304,
+            "ap50_95": 0.8273002317947029
+          },
+          {
+            "class_id": 6,
+            "class": "no_helmet",
+            "precision": 0.8456845390608958,
+            "recall": 0.704165520527331,
+            "ap50": 0.802709083266511,
+            "ap50_95": 0.47695044789892893
+          }
+        ]
+      },
+      {
+        "epoch": 35,
+        "overall_map5095": 0.6064178117515165,
+        "focus": [
+          {
+            "class_id": 0,
+            "class": "helmet",
+            "precision": 0.9397348548948868,
+            "recall": 0.8775510204081632,
+            "ap50": 0.9209855821083686,
+            "ap50_95": 0.7470918285597289
+          },
+          {
+            "class_id": 5,
+            "class": "Person",
+            "precision": 0.9658835169567425,
+            "recall": 0.9355509355509356,
+            "ap50": 0.9694235312557601,
+            "ap50_95": 0.818004918100937
+          },
+          {
+            "class_id": 6,
+            "class": "no_helmet",
+            "precision": 0.8795358501459125,
+            "recall": 0.734210506133192,
+            "ap50": 0.8142616015674498,
+            "ap50_95": 0.4979409867056413
+          }
+        ]
+      },
+      {
+        "epoch": 36,
+        "overall_map5095": 0.6102081538127995,
+        "focus": [
+          {
+            "class_id": 0,
+            "class": "helmet",
+            "precision": 0.9396198403245188,
+            "recall": 0.8877551020408163,
+            "ap50": 0.9171604064997727,
+            "ap50_95": 0.7562077811802533
+          },
+          {
+            "class_id": 5,
+            "class": "Person",
+            "precision": 0.9348044559590202,
+            "recall": 0.9521829521829522,
+            "ap50": 0.9759379270698015,
+            "ap50_95": 0.8167034750926361
+          },
+          {
+            "class_id": 6,
+            "class": "no_helmet",
+            "precision": 0.8792577797026576,
+            "recall": 0.7322816189802603,
+            "ap50": 0.8047129336108749,
+            "ap50_95": 0.5003886833636242
+          }
+        ]
+      },
+      {
+        "epoch": 37,
+        "overall_map5095": 0.6127155682951019,
+        "focus": [
+          {
+            "class_id": 0,
+            "class": "helmet",
+            "precision": 0.9356347794008941,
+            "recall": 0.8877551020408163,
+            "ap50": 0.9128182543863018,
+            "ap50_95": 0.7415401177671282
+          },
+          {
+            "class_id": 5,
+            "class": "Person",
+            "precision": 0.9265035390137241,
+            "recall": 0.9480249480249481,
+            "ap50": 0.9674768359205884,
+            "ap50_95": 0.8196082185878135
+          },
+          {
+            "class_id": 6,
+            "class": "no_helmet",
+            "precision": 0.8226730971690132,
+            "recall": 0.7257040798831882,
+            "ap50": 0.7958839972785148,
+            "ap50_95": 0.4712123948031726
+          }
+        ]
+      }
+    ]
+  },
+  "selection": {
+    "criterion": "highest native no_helmet AP50-95 among five additional epochs",
+    "epoch": 36,
+    "checkpoint_sha256": "96562c759e8f694de9e3b9807961ed0aabfc90e6abdd5c06366b1220c20bb4cb",
+    "retention_method": "copied native last.pt after epoch36; validated CPU checkpoint epoch before and after copy; working baseline untouched",
+    "profile": "configs/runtime-nohelmet-candidate.yaml",
+    "deployment_status": "opt-in evaluation candidate only",
+    "cautions": [
+      "Helmet FP increased at the fixed threshold",
+      "Person FP tradeoff depends on threshold",
+      "No reviewed construction-video labels"
+    ]
+  },
+  "checkpoint_protection": {
+    "original640": "2ccf91ed1827aeb0fb5b35f4fec42d3127feddbe7b9d1f050be3a02426fc45c0",
+    "original960_epoch31": "ace57185e26690f83929c47561dbf3f56bbf4048d613cff6e1daa652463b954f"
+  },
+  "evaluations": {
+    "same_weights_640": {
+      "checkpoint_sha256": "ace57185e26690f83929c47561dbf3f56bbf4048d613cff6e1daa652463b954f",
+      "validation_content_sha256": "8a81b773155277c56983945a04f47ea266b0e28f9c87256c58ddfea840cca3b5",
+      "protocol": {
+        "imgsz": 640,
+        "batch": 2,
+        "device": 0,
+        "workers": 0,
+        "conf": 0.001,
+        "iou": 0.7,
+        "max_det": 300,
+        "half": false,
+        "seed": 42,
+        "deterministic": true,
+        "split": "val"
+      },
+      "results": {
+        "metrics/precision(B)": 0.8926264088917678,
+        "metrics/recall(B)": 0.7480333328870822,
+        "metrics/mAP50(B)": 0.8054483262933884,
+        "metrics/mAP50-95(B)": 0.5853483660759891,
+        "fitness": 0.5853483660759891
+      },
+      "focus_classwise": [
+        {
+          "class_id": 0,
+          "class": "helmet",
+          "precision": 0.928330579402915,
+          "recall": 0.8231292517006803,
+          "ap50": 0.8867529012038144,
+          "ap50_95": 0.7115008906843331
+        },
+        {
+          "class_id": 5,
+          "class": "Person",
+          "precision": 0.9443196113234252,
+          "recall": 0.9147609147609148,
+          "ap50": 0.9626606709115957,
+          "ap50_95": 0.8181067405426257
+        },
+        {
+          "class_id": 6,
+          "class": "no_helmet",
+          "precision": 0.912234335322829,
+          "recall": 0.6145251396648045,
+          "ap50": 0.7049394321294793,
+          "ap50_95": 0.43009020821093574
+        }
+      ],
+      "fixed_counts": {
+        "helmet": {
+          "tp": 246,
+          "fn": 48,
+          "fp": 22,
+          "missed_background": 45
+        },
+        "no_helmet": {
+          "tp": 113,
+          "fn": 66,
+          "fp": 22,
+          "missed_background": 55
+        }
+      }
+    },
+    "reference_960": {
+      "checkpoint_sha256": "ace57185e26690f83929c47561dbf3f56bbf4048d613cff6e1daa652463b954f",
+      "validation_content_sha256": "8a81b773155277c56983945a04f47ea266b0e28f9c87256c58ddfea840cca3b5",
+      "protocol": {
+        "imgsz": 960,
+        "batch": 2,
+        "device": 0,
+        "workers": 0,
+        "conf": 0.001,
+        "iou": 0.7,
+        "max_det": 300,
+        "half": false,
+        "seed": 42,
+        "deterministic": true,
+        "split": "val"
+      },
+      "results": {
+        "metrics/precision(B)": 0.8894141054126469,
+        "metrics/recall(B)": 0.799793219774917,
+        "metrics/mAP50(B)": 0.8457206471257139,
+        "metrics/mAP50-95(B)": 0.6195636711121522,
+        "fitness": 0.6195636711121522
+      },
+      "focus_classwise": [
+        {
+          "class_id": 0,
+          "class": "helmet",
+          "precision": 0.966588955544213,
+          "recall": 0.8856220110265276,
+          "ap50": 0.9194379484725589,
+          "ap50_95": 0.7521170293719778
+        },
+        {
+          "class_id": 5,
+          "class": "Person",
+          "precision": 0.9519980377159719,
+          "recall": 0.9483312692448936,
+          "ap50": 0.9739899074024014,
+          "ap50_95": 0.8167901468564249
+        },
+        {
+          "class_id": 6,
+          "class": "no_helmet",
+          "precision": 0.8777620553852815,
+          "recall": 0.7220953683929814,
+          "ap50": 0.8035909011491693,
+          "ap50_95": 0.48712864572321257
+        }
+      ],
+      "fixed_counts": {
+        "helmet": {
+          "tp": 262,
+          "fn": 32,
+          "fp": 12,
+          "missed_background": 29
+        },
+        "no_helmet": {
+          "tp": 132,
+          "fn": 47,
+          "fp": 32,
+          "missed_background": 40
+        }
+      },
+      "person_operating_points_iou50": {
+        "0.15": {
+          "tp": 459,
+          "fn": 22,
+          "fp": 47
+        },
+        "0.25": {
+          "tp": 457,
+          "fn": 24,
+          "fp": 30
+        },
+        "0.5": {
+          "tp": 445,
+          "fn": 36,
+          "fp": 9
+        }
+      }
+    },
+    "same_weights_1280": {
+      "checkpoint_sha256": "ace57185e26690f83929c47561dbf3f56bbf4048d613cff6e1daa652463b954f",
+      "validation_content_sha256": "8a81b773155277c56983945a04f47ea266b0e28f9c87256c58ddfea840cca3b5",
+      "protocol": {
+        "imgsz": 1280,
+        "batch": 2,
+        "device": 0,
+        "workers": 0,
+        "conf": 0.001,
+        "iou": 0.7,
+        "max_det": 300,
+        "half": false,
+        "seed": 42,
+        "deterministic": true,
+        "split": "val"
+      },
+      "results": {
+        "metrics/precision(B)": 0.8897197873162984,
+        "metrics/recall(B)": 0.7850078709008143,
+        "metrics/mAP50(B)": 0.8460540170532561,
+        "metrics/mAP50-95(B)": 0.613526854513442,
+        "fitness": 0.613526854513442
+      },
+      "focus_classwise": [
+        {
+          "class_id": 0,
+          "class": "helmet",
+          "precision": 0.9681076211957154,
+          "recall": 0.8877551020408163,
+          "ap50": 0.9300361042832732,
+          "ap50_95": 0.7671002536388359
+        },
+        {
+          "class_id": 5,
+          "class": "Person",
+          "precision": 0.9568066728228485,
+          "recall": 0.9438669438669439,
+          "ap50": 0.9764503006362812,
+          "ap50_95": 0.7725944082561287
+        },
+        {
+          "class_id": 6,
+          "class": "no_helmet",
+          "precision": 0.8900243746016337,
+          "recall": 0.7541899441340782,
+          "ap50": 0.831347924807458,
+          "ap50_95": 0.5019776151599251
+        }
+      ],
+      "fixed_counts": {
+        "helmet": {
+          "tp": 265,
+          "fn": 29,
+          "fp": 11,
+          "missed_background": 27
+        },
+        "no_helmet": {
+          "tp": 140,
+          "fn": 39,
+          "fp": 36,
+          "missed_background": 32
+        }
+      }
+    },
+    "focus_960": {
+      "checkpoint_sha256": "96562c759e8f694de9e3b9807961ed0aabfc90e6abdd5c06366b1220c20bb4cb",
+      "validation_content_sha256": "8a81b773155277c56983945a04f47ea266b0e28f9c87256c58ddfea840cca3b5",
+      "protocol": {
+        "imgsz": 960,
+        "batch": 2,
+        "device": 0,
+        "workers": 0,
+        "conf": 0.001,
+        "iou": 0.7,
+        "max_det": 300,
+        "half": false,
+        "seed": 42,
+        "deterministic": true,
+        "split": "val"
+      },
+      "results": {
+        "metrics/precision(B)": 0.8739197880287705,
+        "metrics/recall(B)": 0.7920644996436997,
+        "metrics/mAP50(B)": 0.8374845571844861,
+        "metrics/mAP50-95(B)": 0.610645301111349,
+        "fitness": 0.610645301111349
+      },
+      "focus_classwise": [
+        {
+          "class_id": 0,
+          "class": "helmet",
+          "precision": 0.9394484466317421,
+          "recall": 0.8877551020408163,
+          "ap50": 0.9171772737227805,
+          "ap50_95": 0.7562186719581517
+        },
+        {
+          "class_id": 5,
+          "class": "Person",
+          "precision": 0.93503661853433,
+          "recall": 0.9521829521829522,
+          "ap50": 0.975943370654655,
+          "ap50_95": 0.817147112689762
+        },
+        {
+          "class_id": 6,
+          "class": "no_helmet",
+          "precision": 0.874955223851317,
+          "recall": 0.7318435754189944,
+          "ap50": 0.8047348334087356,
+          "ap50_95": 0.5009612857942733
+        }
+      ],
+      "fixed_counts": {
+        "helmet": {
+          "tp": 261,
+          "fn": 33,
+          "fp": 28,
+          "missed_background": 31
+        },
+        "no_helmet": {
+          "tp": 135,
+          "fn": 44,
+          "fp": 29,
+          "missed_background": 36
+        }
+      },
+      "person_operating_points_iou50": {
+        "0.15": {
+          "tp": 466,
+          "fn": 15,
+          "fp": 67
+        },
+        "0.25": {
+          "tp": 459,
+          "fn": 22,
+          "fp": 37
+        },
+        "0.5": {
+          "tp": 451,
+          "fn": 30,
+          "fp": 11
+        }
+      }
+    }
+  },
+  "source_size_bins_at640": {
+    "smoke": {
+      "under8": {
+        "ground_truth": 57,
+        "correct": 27,
+        "missed_or_wrong": 30,
+        "recall": 0.47368421052631576
+      },
+      "8to16": {
+        "ground_truth": 29,
+        "correct": 23,
+        "missed_or_wrong": 6,
+        "recall": 0.7931034482758621
+      },
+      "16to32": {
+        "ground_truth": 23,
+        "correct": 17,
+        "missed_or_wrong": 6,
+        "recall": 0.7391304347826086
+      },
+      "32plus": {
+        "ground_truth": 70,
+        "correct": 65,
+        "missed_or_wrong": 5,
+        "recall": 0.9285714285714286
+      }
+    },
+    "baseline": {
+      "under8": {
+        "ground_truth": 57,
+        "correct": 29,
+        "missed_or_wrong": 28,
+        "recall": 0.5087719298245614
+      },
+      "8to16": {
+        "ground_truth": 29,
+        "correct": 21,
+        "missed_or_wrong": 8,
+        "recall": 0.7241379310344828
+      },
+      "16to32": {
+        "ground_truth": 23,
+        "correct": 18,
+        "missed_or_wrong": 5,
+        "recall": 0.782608695652174
+      },
+      "32plus": {
+        "ground_truth": 70,
+        "correct": 67,
+        "missed_or_wrong": 3,
+        "recall": 0.9571428571428572
+      }
+    }
+  },
+  "resolution_size_bins_at640": {
+    "smoke": {
+      "under8": {
+        "ground_truth": 57,
+        "correct": 27,
+        "missed_or_wrong": 30,
+        "recall": 0.47368421052631576
+      },
+      "8to16": {
+        "ground_truth": 29,
+        "correct": 23,
+        "missed_or_wrong": 6,
+        "recall": 0.7931034482758621
+      },
+      "16to32": {
+        "ground_truth": 23,
+        "correct": 17,
+        "missed_or_wrong": 6,
+        "recall": 0.7391304347826086
+      },
+      "32plus": {
+        "ground_truth": 70,
+        "correct": 65,
+        "missed_or_wrong": 5,
+        "recall": 0.9285714285714286
+      }
+    },
+    "baseline": {
+      "under8": {
+        "ground_truth": 57,
+        "correct": 34,
+        "missed_or_wrong": 23,
+        "recall": 0.5964912280701754
+      },
+      "8to16": {
+        "ground_truth": 29,
+        "correct": 24,
+        "missed_or_wrong": 5,
+        "recall": 0.8275862068965517
+      },
+      "16to32": {
+        "ground_truth": 23,
+        "correct": 17,
+        "missed_or_wrong": 6,
+        "recall": 0.7391304347826086
+      },
+      "32plus": {
+        "ground_truth": 70,
+        "correct": 65,
+        "missed_or_wrong": 5,
+        "recall": 0.9285714285714286
+      }
+    }
+  },
+  "associations": {
+    "association960": {
+      "scope": "fixed saved genuine detector predictions; per-image person candidates, NOT tracking/association accuracy",
+      "counterfactual_limit": "coordinate rescaling only; does not rerun detector after video resize",
+      "decoded_width_limit": 1280,
+      "results": {
+        "max_width": 1280,
+        "detections": {
+          "person": 506,
+          "barehead": 198,
+          "helmet": 289
+        },
+        "head_attempts": 487,
+        "accepted": 319,
+        "accepted_by_class": {
+          "barehead": 88,
+          "helmet": 231
+        },
+        "rejected_by_class": {
+          "barehead": {
+            "low_detection_confidence": 100,
+            "conflicting_head_predictions": 1,
+            "head_too_small": 4,
+            "no_matching_person": 3,
+            "person_confidence_too_low": 2
+          },
+          "helmet": {
+            "head_too_small": 4,
+            "low_detection_confidence": 41,
+            "conflicting_head_predictions": 1,
+            "multiple_distinct_heads": 2,
+            "no_matching_person": 3,
+            "ambiguous_person_association": 3,
+            "person_confidence_too_low": 1,
+            "head_clipped": 3
+          }
+        },
+        "barehead_annotation_relative_iou50": {
+          "annotation_tp": 143,
+          "annotation_tp_accepted_to_some_person": 84,
+          "annotation_fp": 55,
+          "annotation_fp_not_accepted": 51,
+          "annotation_fp_below_association_confidence": 50,
+          "annotation_tp_not_accepted": 59,
+          "annotation_tp_below_association_confidence": 50,
+          "annotation_fp_accepted_to_some_person": 4,
+          "annotation_tp_below_size_after_confidence": 4
+        },
+        "rejected_by_reason": {
+          "low_detection_confidence": 141,
+          "head_too_small": 8,
+          "conflicting_head_predictions": 2,
+          "multiple_distinct_heads": 2,
+          "no_matching_person": 6,
+          "ambiguous_person_association": 3,
+          "person_confidence_too_low": 3,
+          "head_clipped": 3
+        },
+        "unknown_workers": {
+          "no_visible_head": 181,
+          "conflicting_head_predictions": 1,
+          "multiple_distinct_heads": 1,
+          "ambiguous_person_association": 4
+        }
+      }
+    },
+    "association1280": {
+      "scope": "fixed saved genuine detector predictions; per-image person candidates, NOT tracking/association accuracy",
+      "counterfactual_limit": "coordinate rescaling only; does not rerun detector after video resize",
+      "decoded_width_limit": 1280,
+      "results": {
+        "max_width": 1280,
+        "detections": {
+          "person": 508,
+          "barehead": 204,
+          "helmet": 285
+        },
+        "head_attempts": 489,
+        "accepted": 303,
+        "accepted_by_class": {
+          "barehead": 78,
+          "helmet": 225
+        },
+        "rejected_by_class": {
+          "barehead": {
+            "low_detection_confidence": 108,
+            "head_too_small": 6,
+            "no_matching_person": 5,
+            "multiple_distinct_heads": 4,
+            "person_confidence_too_low": 3
+          },
+          "helmet": {
+            "head_too_small": 9,
+            "low_detection_confidence": 33,
+            "person_confidence_too_low": 5,
+            "ambiguous_person_association": 4,
+            "no_matching_person": 7,
+            "head_clipped": 2
+          }
+        },
+        "barehead_annotation_relative_iou50": {
+          "annotation_tp": 146,
+          "annotation_tp_accepted_to_some_person": 74,
+          "annotation_fp": 58,
+          "annotation_fp_not_accepted": 54,
+          "annotation_fp_below_association_confidence": 54,
+          "annotation_tp_not_accepted": 72,
+          "annotation_tp_below_association_confidence": 54,
+          "annotation_tp_below_size_after_confidence": 6,
+          "annotation_fp_accepted_to_some_person": 4
+        },
+        "rejected_by_reason": {
+          "low_detection_confidence": 141,
+          "head_too_small": 15,
+          "person_confidence_too_low": 8,
+          "no_matching_person": 12,
+          "ambiguous_person_association": 4,
+          "multiple_distinct_heads": 4,
+          "head_clipped": 2
+        },
+        "unknown_workers": {
+          "no_visible_head": 197,
+          "ambiguous_person_association": 6,
+          "multiple_distinct_heads": 2
+        }
+      }
+    },
+    "association960-person05": {
+      "scope": "fixed saved genuine detector predictions; per-image person candidates, NOT tracking/association accuracy",
+      "counterfactual_limit": "coordinate rescaling only; does not rerun detector after video resize",
+      "decoded_width_limit": 1280,
+      "results": {
+        "max_width": 1280,
+        "detections": {
+          "person": 506,
+          "barehead": 198,
+          "helmet": 289
+        },
+        "head_attempts": 487,
+        "accepted": 321,
+        "accepted_by_class": {
+          "barehead": 89,
+          "helmet": 232
+        },
+        "rejected_by_class": {
+          "barehead": {
+            "low_detection_confidence": 100,
+            "conflicting_head_predictions": 1,
+            "head_too_small": 4,
+            "no_matching_person": 3,
+            "ambiguous_person_association": 1
+          },
+          "helmet": {
+            "head_too_small": 4,
+            "low_detection_confidence": 41,
+            "conflicting_head_predictions": 1,
+            "ambiguous_person_association": 5,
+            "no_matching_person": 3,
+            "head_clipped": 3
+          }
+        },
+        "barehead_annotation_relative_iou50": {
+          "annotation_tp": 143,
+          "annotation_tp_accepted_to_some_person": 85,
+          "annotation_fp": 55,
+          "annotation_fp_not_accepted": 51,
+          "annotation_fp_below_association_confidence": 50,
+          "annotation_tp_not_accepted": 58,
+          "annotation_tp_below_association_confidence": 50,
+          "annotation_fp_accepted_to_some_person": 4,
+          "annotation_tp_below_size_after_confidence": 4
+        },
+        "rejected_by_reason": {
+          "low_detection_confidence": 141,
+          "head_too_small": 8,
+          "conflicting_head_predictions": 2,
+          "ambiguous_person_association": 6,
+          "no_matching_person": 6,
+          "head_clipped": 3
+        },
+        "unknown_workers": {
+          "no_visible_head": 176,
+          "conflicting_head_predictions": 1,
+          "ambiguous_person_association": 8
+        }
+      }
+    },
+    "association-focus960": {
+      "scope": "fixed saved genuine detector predictions; per-image person candidates, NOT tracking/association accuracy",
+      "counterfactual_limit": "coordinate rescaling only; does not rerun detector after video resize",
+      "decoded_width_limit": 1280,
+      "results": {
+        "max_width": 1280,
+        "detections": {
+          "person": 533,
+          "barehead": 196,
+          "helmet": 314
+        },
+        "head_attempts": 510,
+        "accepted": 330,
+        "accepted_by_class": {
+          "barehead": 95,
+          "helmet": 235
+        },
+        "rejected_by_class": {
+          "helmet": {
+            "low_detection_confidence": 59,
+            "head_too_small": 9,
+            "ambiguous_person_association": 2,
+            "multiple_distinct_heads": 4,
+            "no_matching_person": 2,
+            "person_confidence_too_low": 2,
+            "head_clipped": 1
+          },
+          "barehead": {
+            "low_detection_confidence": 89,
+            "head_too_small": 7,
+            "person_confidence_too_low": 1,
+            "no_matching_person": 2,
+            "multiple_distinct_heads": 2
+          }
+        },
+        "barehead_annotation_relative_iou50": {
+          "annotation_tp": 142,
+          "annotation_tp_accepted_to_some_person": 92,
+          "annotation_fp": 54,
+          "annotation_fp_not_accepted": 51,
+          "annotation_fp_below_association_confidence": 50,
+          "annotation_tp_not_accepted": 50,
+          "annotation_tp_below_association_confidence": 39,
+          "annotation_tp_below_size_after_confidence": 7,
+          "annotation_fp_accepted_to_some_person": 3
+        },
+        "rejected_by_reason": {
+          "low_detection_confidence": 148,
+          "head_too_small": 16,
+          "ambiguous_person_association": 2,
+          "multiple_distinct_heads": 6,
+          "no_matching_person": 4,
+          "person_confidence_too_low": 3,
+          "head_clipped": 1
+        },
+        "unknown_workers": {
+          "no_visible_head": 196,
+          "ambiguous_person_association": 4,
+          "multiple_distinct_heads": 3
+        }
+      }
+    },
+    "association-focus960-person05": {
+      "scope": "fixed saved genuine detector predictions; per-image person candidates, NOT tracking/association accuracy",
+      "counterfactual_limit": "coordinate rescaling only; does not rerun detector after video resize",
+      "decoded_width_limit": 1280,
+      "results": {
+        "max_width": 1280,
+        "detections": {
+          "person": 533,
+          "barehead": 196,
+          "helmet": 314
+        },
+        "head_attempts": 510,
+        "accepted": 334,
+        "accepted_by_class": {
+          "barehead": 95,
+          "helmet": 239
+        },
+        "rejected_by_class": {
+          "helmet": {
+            "low_detection_confidence": 59,
+            "head_too_small": 9,
+            "ambiguous_person_association": 4,
+            "no_matching_person": 2,
+            "head_clipped": 1
+          },
+          "barehead": {
+            "low_detection_confidence": 89,
+            "head_too_small": 7,
+            "person_confidence_too_low": 1,
+            "no_matching_person": 2,
+            "multiple_distinct_heads": 2
+          }
+        },
+        "barehead_annotation_relative_iou50": {
+          "annotation_tp": 142,
+          "annotation_tp_accepted_to_some_person": 92,
+          "annotation_fp": 54,
+          "annotation_fp_not_accepted": 51,
+          "annotation_fp_below_association_confidence": 50,
+          "annotation_tp_not_accepted": 50,
+          "annotation_tp_below_association_confidence": 39,
+          "annotation_tp_below_size_after_confidence": 7,
+          "annotation_fp_accepted_to_some_person": 3
+        },
+        "rejected_by_reason": {
+          "low_detection_confidence": 148,
+          "head_too_small": 16,
+          "ambiguous_person_association": 4,
+          "no_matching_person": 4,
+          "person_confidence_too_low": 1,
+          "multiple_distinct_heads": 2,
+          "head_clipped": 1
+        },
+        "unknown_workers": {
+          "no_visible_head": 192,
+          "ambiguous_person_association": 6,
+          "multiple_distinct_heads": 1
+        }
+      }
+    }
+  },
+  "pipeline_benchmarks": {
+    "scope": "same checkpoint; empty-office MP4 only; processing excludes constructor; ordered960 then1280; no worker/event accuracy claim",
+    "runs": [
+      {
+        "imgsz": 960,
+        "status": "completed",
+        "processed_frames": 80,
+        "processed_fps": 21.78649237472482,
+        "ingestion": {
+          "decoded": 150,
+          "sampled": 80,
+          "sampling_skipped": 70,
+          "dropped": 0,
+          "reconnects": 0,
+          "source_fps": 15.0,
+          "timestamp_fallbacks": 0,
+          "errors": []
+        },
+        "latency_seconds": {
+          "basis": "decode-to-output; excludes camera/network and async event commit",
+          "sample_count": 80,
+          "p50": 0.40600000000085856,
+          "p95": 0.674350000000504,
+          "retained_samples": 80
+        },
+        "performance": {
+          "main_thread": {
+            "frame_wait": {
+              "count": 81,
+              "total_seconds": 0.04395719999411085,
+              "max_seconds": 0.040919499999290565,
+              "retained_samples": 81,
+              "p50_seconds": 2.9999999242136255e-05,
+              "p95_seconds": 9.589999899617396e-05,
+              "percentile_scope": "last 2048 observations"
+            },
+            "scene_change": {
+              "count": 80,
+              "total_seconds": 0.14673240000774967,
+              "max_seconds": 0.006978700001127436,
+              "retained_samples": 80,
+              "p50_seconds": 0.0017346499998893705,
+              "p95_seconds": 0.004206380000778153,
+              "percentile_scope": "last 2048 observations"
+            },
+            "detector_inference": {
+              "count": 80,
+              "total_seconds": 2.558772600003067,
+              "max_seconds": 0.4840128999985609,
+              "retained_samples": 80,
+              "p50_seconds": 0.02410524999959307,
+              "p95_seconds": 0.04824760499977856,
+              "percentile_scope": "last 2048 observations"
+            },
+            "bytetrack": {
+              "count": 80,
+              "total_seconds": 0.021413299999039737,
+              "max_seconds": 0.001006700000289129,
+              "retained_samples": 80,
+              "p50_seconds": 0.00023904999943624716,
+              "p95_seconds": 0.0005656550009916825,
+              "percentile_scope": "last 2048 observations"
+            },
+            "head_association": {
+              "count": 80,
+              "total_seconds": 0.0012899999946967,
+              "max_seconds": 8.909999996831175e-05,
+              "retained_samples": 80,
+              "p50_seconds": 1.4799999917158857e-05,
+              "p95_seconds": 2.7729999874281927e-05,
+              "percentile_scope": "last 2048 observations"
+            },
+            "temporal_rules": {
+              "count": 80,
+              "total_seconds": 0.0005902999891986838,
+              "max_seconds": 0.00014290000035543926,
+              "retained_samples": 80,
+              "p50_seconds": 4.999999873689376e-06,
+              "p95_seconds": 8.914998670661588e-06,
+              "percentile_scope": "last 2048 observations"
+            },
+            "annotation_and_encode": {
+              "count": 80,
+              "total_seconds": 0.6613332000088121,
+              "max_seconds": 0.026571200000034878,
+              "retained_samples": 80,
+              "p50_seconds": 0.0072752999994918355,
+              "p95_seconds": 0.014390805000311955,
+              "percentile_scope": "last 2048 observations"
+            },
+            "frame_jsonl": {
+              "count": 80,
+              "total_seconds": 0.010194900012720609,
+              "max_seconds": 0.0009415000004082685,
+              "retained_samples": 80,
+              "p50_seconds": 0.00010454999937792309,
+              "p95_seconds": 0.00026704999991125075,
+              "percentile_scope": "last 2048 observations"
+            },
+            "camera_heartbeat": {
+              "count": 11,
+              "total_seconds": 0.14097600000059174,
+              "max_seconds": 0.027939200001128484,
+              "retained_samples": 11,
+              "p50_seconds": 0.01146590000098513,
+              "p95_seconds": 0.02266959999997198,
+              "percentile_scope": "last 2048 observations"
+            },
+            "shutdown": {
+              "count": 3,
+              "total_seconds": 0.0011619999986578478,
+              "max_seconds": 0.0008713999995961785,
+              "retained_samples": 3,
+              "p50_seconds": 0.0002865999995265156,
+              "p95_seconds": 0.0008129199995892122,
+              "percentile_scope": "last 2048 observations"
+            }
+          },
+          "decoder_thread": {
+            "decode_read": {
+              "count": 151,
+              "total_seconds": 0.5332923000132723,
+              "max_seconds": 0.021873499999855994,
+              "retained_samples": 151,
+              "p50_seconds": 0.0025846000007732073,
+              "p95_seconds": 0.008181699999113334,
+              "percentile_scope": "last 2048 observations"
+            }
+          },
+          "video_output": {
+            "annotation_render": {
+              "count": 80,
+              "total_seconds": 0.21697410001252138,
+              "max_seconds": 0.008193800000299234,
+              "retained_samples": 80,
+              "p50_seconds": 0.002288050000970543,
+              "p95_seconds": 0.004783690000931526,
+              "percentile_scope": "last 2048 observations"
+            },
+            "video_encode": {
+              "count": 80,
+              "total_seconds": 0.4162367999961134,
+              "max_seconds": 0.017406500001015957,
+              "retained_samples": 80,
+              "p50_seconds": 0.004554700000880985,
+              "p95_seconds": 0.009475564999320337,
+              "percentile_scope": "last 2048 observations"
+            }
+          },
+          "event_io_thread": {},
+          "gpu_memory": {
+            "device": 0,
+            "allocated_bytes": 71639040,
+            "reserved_bytes": 209715200,
+            "peak_allocated_bytes": 155910144,
+            "peak_reserved_bytes": 209715200,
+            "scope": "process allocator since last reset; includes model initialization"
+          },
+          "detector_initialization_seconds": 26.179280199999994,
+          "fps_including_detector_initialization": 2.6799520645013652,
+          "sampling_target_fps": 8.0,
+          "meets_sampling_target": true,
+          "scope": "processing FPS includes cold inference and I/O drain, excludes prior detector construction; concurrent totals overlap"
+        },
+        "confirmed_events": 0
+      },
+      {
+        "imgsz": 1280,
+        "status": "completed",
+        "processed_frames": 80,
+        "processed_fps": 21.60410477990037,
+        "ingestion": {
+          "decoded": 150,
+          "sampled": 80,
+          "sampling_skipped": 70,
+          "dropped": 0,
+          "reconnects": 0,
+          "source_fps": 15.0,
+          "timestamp_fallbacks": 0,
+          "errors": []
+        },
+        "latency_seconds": {
+          "basis": "decode-to-output; excludes camera/network and async event commit",
+          "sample_count": 80,
+          "p50": 0.4529999999995198,
+          "p95": 0.5167499999996834,
+          "retained_samples": 80
+        },
+        "performance": {
+          "main_thread": {
+            "frame_wait": {
+              "count": 81,
+              "total_seconds": 0.03804610001316178,
+              "max_seconds": 0.034914500000013504,
+              "retained_samples": 81,
+              "p50_seconds": 3.110000034212135e-05,
+              "p95_seconds": 9.1799998699571e-05,
+              "percentile_scope": "last 2048 observations"
+            },
+            "scene_change": {
+              "count": 80,
+              "total_seconds": 0.1411532000220177,
+              "max_seconds": 0.00711800000135554,
+              "retained_samples": 80,
+              "p50_seconds": 0.0017549000003782567,
+              "p95_seconds": 0.0039264700006242485,
+              "percentile_scope": "last 2048 observations"
+            },
+            "detector_inference": {
+              "count": 80,
+              "total_seconds": 2.711107199993421,
+              "max_seconds": 0.2857179999991786,
+              "retained_samples": 80,
+              "p50_seconds": 0.03050195000014355,
+              "p95_seconds": 0.05144793500085142,
+              "percentile_scope": "last 2048 observations"
+            },
+            "bytetrack": {
+              "count": 80,
+              "total_seconds": 0.01827089998732845,
+              "max_seconds": 0.0006335999987641117,
+              "retained_samples": 80,
+              "p50_seconds": 0.00023864999911893392,
+              "p95_seconds": 0.00038866000031703127,
+              "percentile_scope": "last 2048 observations"
+            },
+            "head_association": {
+              "count": 80,
+              "total_seconds": 0.0011731000049621798,
+              "max_seconds": 3.509999987727497e-05,
+              "retained_samples": 80,
+              "p50_seconds": 1.4999999621068127e-05,
+              "p95_seconds": 2.4079999366222166e-05,
+              "percentile_scope": "last 2048 observations"
+            },
+            "temporal_rules": {
+              "count": 80,
+              "total_seconds": 0.0003766000081668608,
+              "max_seconds": 1.0600000678095967e-05,
+              "retained_samples": 80,
+              "p50_seconds": 4.900000931229442e-06,
+              "p95_seconds": 7.474999983969606e-06,
+              "percentile_scope": "last 2048 observations"
+            },
+            "annotation_and_encode": {
+              "count": 80,
+              "total_seconds": 0.6123157999954856,
+              "max_seconds": 0.022206600000572507,
+              "retained_samples": 80,
+              "p50_seconds": 0.00695480000013049,
+              "p95_seconds": 0.015170769999986074,
+              "percentile_scope": "last 2048 observations"
+            },
+            "frame_jsonl": {
+              "count": 80,
+              "total_seconds": 0.009952300002623815,
+              "max_seconds": 0.0010588000004645437,
+              "retained_samples": 80,
+              "p50_seconds": 0.00010815000041475287,
+              "p95_seconds": 0.0002510900010747718,
+              "percentile_scope": "last 2048 observations"
+            },
+            "camera_heartbeat": {
+              "count": 11,
+              "total_seconds": 0.11701370000082534,
+              "max_seconds": 0.01321989999996731,
+              "retained_samples": 11,
+              "p50_seconds": 0.011021199999959208,
+              "p95_seconds": 0.012954249999893364,
+              "percentile_scope": "last 2048 observations"
+            },
+            "shutdown": {
+              "count": 3,
+              "total_seconds": 0.0020748000006278744,
+              "max_seconds": 0.0010535000001254957,
+              "retained_samples": 3,
+              "p50_seconds": 0.0010180000008404022,
+              "p95_seconds": 0.0010499500001969863,
+              "percentile_scope": "last 2048 observations"
+            }
+          },
+          "decoder_thread": {
+            "decode_read": {
+              "count": 151,
+              "total_seconds": 0.46230529999047576,
+              "max_seconds": 0.02503230000002077,
+              "retained_samples": 151,
+              "p50_seconds": 0.002383999999437947,
+              "p95_seconds": 0.0061981499993635225,
+              "percentile_scope": "last 2048 observations"
+            }
+          },
+          "video_output": {
+            "annotation_render": {
+              "count": 80,
+              "total_seconds": 0.1931458000017301,
+              "max_seconds": 0.004554400000415626,
+              "retained_samples": 80,
+              "p50_seconds": 0.0022264500003075227,
+              "p95_seconds": 0.003839560000596975,
+              "percentile_scope": "last 2048 observations"
+            },
+            "video_encode": {
+              "count": 80,
+              "total_seconds": 0.39248840000618657,
+              "max_seconds": 0.018901499999628868,
+              "retained_samples": 80,
+              "p50_seconds": 0.004353249999439868,
+              "p95_seconds": 0.011702865000552265,
+              "percentile_scope": "last 2048 observations"
+            }
+          },
+          "event_io_thread": {},
+          "gpu_memory": {
+            "device": 0,
+            "allocated_bytes": 71782400,
+            "reserved_bytes": 287309824,
+            "peak_allocated_bytes": 219246592,
+            "peak_reserved_bytes": 287309824,
+            "scope": "process allocator since last reset; includes model initialization"
+          },
+          "detector_initialization_seconds": 0.4149589999997261,
+          "fps_including_detector_initialization": 19.427099687000116,
+          "sampling_target_fps": 8.0,
+          "meets_sampling_target": true,
+          "scope": "processing FPS includes cold inference and I/O drain, excludes prior detector construction; concurrent totals overlap"
+        },
+        "confirmed_events": 0
+      }
+    ]
+  },
+  "focus_pipeline": {
+    "status": "completed",
+    "processed_frames": 80,
+    "processed_fps": 19.54079140205588,
+    "ingestion": {
+      "decoded": 150,
+      "sampled": 80,
+      "sampling_skipped": 70,
+      "dropped": 0,
+      "reconnects": 0,
+      "source_fps": 15.0,
+      "timestamp_fallbacks": 0,
+      "errors": []
+    },
+    "latency_seconds": {
+      "basis": "decode-to-output; excludes camera/network and async event commit",
+      "sample_count": 80,
+      "p50": 0.4219999999995707,
+      "p95": 0.8310999999995146,
+      "retained_samples": 80
+    },
+    "confirmed_events": 0,
+    "performance": {
+      "main_thread": {
+        "frame_wait": {
+          "count": 81,
+          "total_seconds": 0.044987499988565105,
+          "max_seconds": 0.041458899999270216,
+          "retained_samples": 81,
+          "p50_seconds": 3.299999843875412e-05,
+          "p95_seconds": 0.0001052999996318249,
+          "percentile_scope": "last 2048 observations"
+        },
+        "scene_change": {
+          "count": 80,
+          "total_seconds": 0.16867730000558367,
+          "max_seconds": 0.008521199999449891,
+          "retained_samples": 80,
+          "p50_seconds": 0.001861550000285206,
+          "p95_seconds": 0.004383680000046296,
+          "percentile_scope": "last 2048 observations"
+        },
+        "detector_inference": {
+          "count": 80,
+          "total_seconds": 2.9090403000063816,
+          "max_seconds": 0.6400666000008641,
+          "retained_samples": 80,
+          "p50_seconds": 0.02544529999977385,
+          "p95_seconds": 0.04955040499999085,
+          "percentile_scope": "last 2048 observations"
+        },
+        "bytetrack": {
+          "count": 80,
+          "total_seconds": 0.021835899991856422,
+          "max_seconds": 0.0008393999996769708,
+          "retained_samples": 80,
+          "p50_seconds": 0.00024664999909873586,
+          "p95_seconds": 0.00041561499865565553,
+          "percentile_scope": "last 2048 observations"
+        },
+        "head_association": {
+          "count": 80,
+          "total_seconds": 0.0014714999997522682,
+          "max_seconds": 0.00017180000031657983,
+          "retained_samples": 80,
+          "p50_seconds": 1.4850001207378227e-05,
+          "p95_seconds": 3.2005001230572796e-05,
+          "percentile_scope": "last 2048 observations"
+        },
+        "temporal_rules": {
+          "count": 80,
+          "total_seconds": 0.00047309999899880495,
+          "max_seconds": 2.5499999537714757e-05,
+          "retained_samples": 80,
+          "p50_seconds": 4.999999873689376e-06,
+          "p95_seconds": 1.3205000504967756e-05,
+          "percentile_scope": "last 2048 observations"
+        },
+        "annotation_and_encode": {
+          "count": 80,
+          "total_seconds": 0.6992196000046533,
+          "max_seconds": 0.019062400000620983,
+          "retained_samples": 80,
+          "p50_seconds": 0.007512950000091223,
+          "p95_seconds": 0.014365855000141887,
+          "percentile_scope": "last 2048 observations"
+        },
+        "frame_jsonl": {
+          "count": 80,
+          "total_seconds": 0.011423400002968265,
+          "max_seconds": 0.0006338999992294703,
+          "retained_samples": 80,
+          "p50_seconds": 0.00011049999920942355,
+          "p95_seconds": 0.0003075850004279346,
+          "percentile_scope": "last 2048 observations"
+        },
+        "camera_heartbeat": {
+          "count": 11,
+          "total_seconds": 0.16257990000121936,
+          "max_seconds": 0.01797710000028019,
+          "retained_samples": 11,
+          "p50_seconds": 0.014773500000956119,
+          "p95_seconds": 0.01796085000023595,
+          "percentile_scope": "last 2048 observations"
+        },
+        "shutdown": {
+          "count": 3,
+          "total_seconds": 0.001803999999538064,
+          "max_seconds": 0.0016488999990542652,
+          "retained_samples": 3,
+          "p50_seconds": 0.000149200001033023,
+          "p95_seconds": 0.0014989299992521409,
+          "percentile_scope": "last 2048 observations"
+        }
+      },
+      "decoder_thread": {
+        "decode_read": {
+          "count": 151,
+          "total_seconds": 0.4820753999902081,
+          "max_seconds": 0.022069900000133202,
+          "retained_samples": 151,
+          "p50_seconds": 0.0025243000000045868,
+          "p95_seconds": 0.006772049999199226,
+          "percentile_scope": "last 2048 observations"
+        }
+      },
+      "video_output": {
+        "annotation_render": {
+          "count": 80,
+          "total_seconds": 0.2159211000034702,
+          "max_seconds": 0.006285299999944982,
+          "retained_samples": 80,
+          "p50_seconds": 0.002441000000544591,
+          "p95_seconds": 0.0040357349993428195,
+          "percentile_scope": "last 2048 observations"
+        },
+        "video_encode": {
+          "count": 80,
+          "total_seconds": 0.45215340000140714,
+          "max_seconds": 0.014450200000283075,
+          "retained_samples": 80,
+          "p50_seconds": 0.0047998999998526415,
+          "p95_seconds": 0.010268065000400384,
+          "percentile_scope": "last 2048 observations"
+        }
+      },
+      "event_io_thread": {},
+      "gpu_memory": {
+        "device": 0,
+        "allocated_bytes": 71639040,
+        "reserved_bytes": 209715200,
+        "peak_allocated_bytes": 155910144,
+        "peak_reserved_bytes": 209715200,
+        "scope": "process allocator since last reset; includes model initialization"
+      },
+      "detector_initialization_seconds": 29.71515080000063,
+      "fps_including_detector_initialization": 2.3662232888736305,
+      "sampling_target_fps": 8.0,
+      "meets_sampling_target": true,
+      "scope": "processing FPS includes cold inference and I/O drain, excludes prior detector construction; concurrent totals overlap"
+    }
+  },
+  "checks": {
+    "local_cpu": "86 passed,3 skipped,exit0",
+    "local_compileall": "passed",
+    "local_ruff_mypy": "not installed; local check.py honestly exits1; no dependency upgrades",
+    "remote_ci": {
+      "commit": "c30d54e0cde7c120c11bdad0918e5b35a3ee927d",
+      "run": "https://github.com/saltuwwa/siteguard-vision/actions/runs/44065661639",
+      "ruff": "passed",
+      "mypy": "no issues in10 core files",
+      "core": "84 passed,5 skipped",
+      "genuine_bytetrack_cpu": "4 passed,1 deselected"
+    },
+    "gpu_smoke": "1 passed,2 deselected,exit0; genuine epoch36 candidate on CUDA0, final repeat2026-11-18",
+    "mp4_full_decode": "all3 outputs exit0"
+  },
+  "external_blocks": [
+    "No construction MP4 downloaded: shell DNS unavailable",
+    "No Hard Hat Workers export/API credential; no new dataset was added"
+  ],
+  "privacy": "Only aggregate metrics and model/data hashes are public; raw diagnostics, image paths, videos and weights stay local",
+  "finalized_on": "2026-11-18",
+  "matching_notes": {
+    "head_fixed_counts": "existing class-confusion diagnostic: one-to-one spatial matching at IoU0.5, confidence0.25",
+    "person_operating_points": "Person-only one-to-one class-aware IoU0.5 matching, not tracked identities"
+  }
+}

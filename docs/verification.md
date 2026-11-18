@@ -1,4 +1,4 @@
-# SiteGuard verification - P1, 2026-11-17
+# SiteGuard verification - P1, finalized 2026-11-18
 
 The 640px baseline checkpoint and dataset remain unchanged. P1 adds rejection diagnostics,
 bounded stage timers, failure-path reports, explicit checkpoint/device/precision checks,
@@ -6,7 +6,106 @@ conservative association corrections and distinct detection/track/event annotati
 See [technical audit](reports/pipeline-audit.md) and [machine-readable runtime report](reports/p1-runtime-20261116.json).
 No frontend source or endpoint schema was changed.
 
-## Latest: explicitly requested GPU0 retry and checkpoint selection
+## Latest: five-epoch continuation and a focused helmet candidate
+
+The explicitly requested GPU0 continuation completed epochs33-37, restoring the
+epoch32 optimizer/EMA/history and retaining the original80-epoch learning-rate
+horizon. Micro-batch changed8->2 with explicit opt-in; interruption, restarted RNG
+and batch-normalization grouping remain confounders. Runtime was846.914s excluding
+prior initialization, peak allocated3,026,822,656 and reserved4,267,704,320 bytes.
+No restart was observed during this bounded attempt. This does not prove general
+host stability. The run correctly reports `segment_completed`, not completion of
+the full80-epoch experiment. Original images, labels and baseline weights remain
+unchanged. All12 source classes were retained.
+
+The native overall-mAP best remained epoch31. Epoch36 had the highest `no_helmet`
+AP among the five additional epochs, so its actual native checkpoint was retained
+separately. It was copied after verifying its epoch and hash; it was not fabricated
+or substituted for native best/last. Flushed `resumable-last.pt` (epoch37) and
+`resumable-best.pt` (epoch31) both load with optimizer state, before the vendor's
+final optimizer stripping. The continuation code also preserves initial-model
+lineage across multiple resumes and checks the checkpoint's actual batch value.
+
+At identical960px/batch2/FP32 validation settings and the same200 source images:
+
+- `no_helmet` TP/FN/FP at confidence0.25,IoU0.5: **132/47/32 ->135/44/29**.
+  Native class recall0.722095->0.731844; AP50-95=0.487129->0.500961.
+- Under8px source-size bins anchored to640:27/57->29/57. Other size bins are
+  mixed; no uniform small-object improvement is claimed.
+- Person-only matching at the default new-track threshold0.5:
+  TP/FN/FP445/36/9->451/30/11. This is proposal-level still-image evaluation,
+  not tracking identity accuracy. Class-wise Person AP50-95 stayed near0.817.
+- Helmet fixed-threshold FP increased12->28, and overall mAP50-95 decreased
+  0.619564->0.610645. These regressions remain explicit; selecting this candidate
+  prioritizes the missing-helmet task rather than claiming all classes improved.
+- Existing association gates, without lowering thresholds, accepted92 instead
+  of84 annotation-relative bare-head TP boxes to some person, with3 instead of4
+  accepted annotation-relative FP boxes. Per-image person candidates and head
+  rescaling are not labeled worker associations or actual video alert metrics.
+
+The opt-in profile is `configs/runtime-nohelmet-candidate.yaml`; private weights
+are `models/ppe-nohelmet-960-epoch36-candidate.pt`, SHA256
+`96562c759e8f694de9e3b9807961ed0aabfc90e6abdd5c06366b1220c20bb4cb`.
+Default models and frontend behavior were not switched. Helmet false positives,
+crowded tracking and temporal alerts need reviewed construction-video validation.
+
+A same-checkpoint inference ablation held weights/settings fixed at640/960/1280:
+`no_helmet` TP/FN/FP=113/66/22,132/47/32,140/39/36. Although1280 recovered more
+small heads, existing association gates accepted fewer annotation-relative TP
+heads (74 versus84). A reviewed crop also showed an extra bare-head hypothesis
+over a visible yellow helmet. Therefore1280 was **not** promoted as the default.
+The comparison tool now supports960->1280 with fixed source-size bins and can
+require identical checkpoint hashes for inference-only ablations.
+
+Head and person confidence gates can now be configured separately. The default
+`min_person_confidence: null` preserves the previous shared0.6 threshold. A0.5
+person-gate counterfactual gave only one extra accepted TP for epoch31 and none
+for the new model; head threshold0.6, geometry, ambiguity and temporal rules were
+preserved. Defaults remain unchanged. Tests cover exposed overlapping-person
+ambiguity, weak heads, conflicting head classes and nonfinite thresholds.
+
+All candidates ran through the genuine detector/ByteTrack/association/rules/sink
+path using the existing empty-office MP4. All three80-frame MP4 outputs fully
+decoded with FFmpeg,exit0. Original-checkpoint960/1280 processing throughput was
+21.79/21.60FPS; the new focused960 candidate19.54FPS. These short, ordered,
+low-activity measurements exclude constructor time and are **not construction
+worker benchmarks**. Source150frames/15FPS, sampled80/8FPS,zero drops,zero events.
+No screenshot was fabricated for a nonexistent event. The report retains per-stage
+timing, decode-to-output latency and process allocator metrics.
+
+CPU tests86passed/3skipped/exit0; compileall passed. Local Ruff/mypy are still
+missing and the local aggregate check honestly exits1. Code commit
+`c30d54e0cde7c120c11bdad0918e5b35a3ee927d`
+[passed CI](https://github.com/saltuwwa/siteguard-vision/actions/runs/44065661639):
+Ruff passed, mypy clean in10 core files,84 core tests/5skips; genuine ByteTrack
+CPU job4passed/1deselected. Final candidate GPU smoke results are recorded in
+[the aggregate measured report](reports/detection-improvement-20261117.json).
+Raw diagnostics, per-image paths, weights and footage remain gitignored.
+
+Reproduction from existing trusted local artifacts (new output names required):
+
+```powershell
+$env:CUDA_VISIBLE_DEVICES='0'
+$env:YOLO_AUTOINSTALL='false'
+$env:CUBLAS_WORKSPACE_CONFIG=':4096:8'
+# Choose a new run name; the template restores the original private epoch32 state:
+.\.venv\Scripts\siteguard.exe train --config configs/train-960-continuation.yaml
+.\.venv\Scripts\python.exe scripts/analyze_checkpoint.py --model models/ppe-nohelmet-960-epoch36-candidate.pt --data data/local/construction-ppe.source.yaml --output runs/focus-validation-new --imgsz 960 --batch 2 --device 0
+.\.venv\Scripts\python.exe scripts/compare_checkpoints.py --reference runs/retry-20261117/eval-960-epoch31 --candidate runs/focus-validation-new --data data/local/construction-ppe.source.yaml --output runs/focus-comparison-new.json
+# After obtaining and visually reviewing the public demo video:
+.\.venv\Scripts\siteguard.exe analyze --input data/demo/pexels-35631532/source.mp4 --output runs/focus-construction-new --config configs/runtime-nohelmet-candidate.yaml
+```
+
+The selected focus checkpoint was retained during the completed run; validation
+from that saved file is reproducible. Exact interrupted-training replay is not
+claimed. The new construction MP4 and Hard Hat Workers export remain unavailable;
+shell DNS is still blocked on November18. No new dataset was silently added.
+Next experiment requires acquiring and auditing the unaugmented Hard Hat Workers
+v10 source, resolving body/head semantics and annotation completeness, preserving
+the frozen validation set and leakage checks before a compatible training build.
+Independent real-camera event accuracy remains unverified.
+
+## Earlier: one-epoch GPU0 retry and checkpoint selection
 
 After crash analysis, the user explicitly requested another GPU0 attempt. Three
 real backward batches at960px/batch2/FP32 completed with exit0, peak allocated

@@ -5,6 +5,29 @@ two RTX 5090 devices. No frontend source or HTTP endpoint schema was changed.
 The original 640px experiment remains protected by checkpoint/data hashes.
 This audit does not establish production readiness or independent accuracy.
 
+## Follow-up verified 2026-11-17, finalized November18
+
+- Bounded continuation now restores the native optimizer/EMA/history, permits an
+  explicit micro-batch change and preserves the original LR horizon. Flushed
+  resumable checkpoints survive native final optimizer stripping. Five genuine
+  GPU0 epochs33-37 verified the stop boundary and optimizer-bearing snapshots.
+  Multiple-resume lineage and actual checkpoint batch checks prevent misleading
+  recipe metadata. Existing source weights are not overwritten.
+- Head/person association confidence can be configured separately while retaining
+  historical defaults. Head confidence, geometry, ambiguity and temporal rules
+  stay conservative; an additional plausible body can expose an ambiguous match.
+  Finite threshold validation and meaningful regressions cover these cases.
+- Same-checkpoint640/960/1280 inference was measured. Larger inputs improved raw
+  small-head recall but weakened accepted head evidence under existing gates;
+  the production default was not changed. The comparison tool supports any input
+  resolution with the same640-projected SOURCE bins and optional weight binding.
+- The epoch36 focus candidate improves no_helmet fixed-threshold TP/FN/FP from
+  132/47/32 to135/44/29 and accepted annotation-relative head evidence from84/4
+  TP/FP to92/3. Helmet FP rises12->28, overall mAP declines and person counts
+  trade recall against extra boxes. It remains an opt-in development candidate.
+  Existing low-activity office video verifies plumbing, not crowded-site accuracy.
+  See verification and its aggregate report for exact settings, hashes and tests.
+
 ## High priority: fixed reliability defects
 
 - **Stale detector readiness after an exception.** `YoloDetector.detect` previously
